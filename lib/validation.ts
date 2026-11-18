@@ -65,6 +65,14 @@ export const signInSchema = z.object({
 
 /** Logo : data URL d'une image déjà redimensionnée dans le navigateur (240 px max). */
 export const LOGO_MAX_BYTES = 200 * 1024;
+
+/** Le contenu doit réellement être une image du type annoncé (signature des premiers octets). */
+export function matchesImageSignature(mime: "png" | "jpeg" | "webp", base64: string): boolean {
+  const head = Buffer.from(base64.slice(0, 24), "base64");
+  if (mime === "png") return head.length >= 8 && head.subarray(0, 8).equals(Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]));
+  if (mime === "jpeg") return head.length >= 3 && head[0] === 0xff && head[1] === 0xd8 && head[2] === 0xff;
+  return head.length >= 12 && head.subarray(0, 4).toString("ascii") === "RIFF" && head.subarray(8, 12).toString("ascii") === "WEBP";
+}
 const logoSchema = z
   .string()
   .optional()
@@ -73,6 +81,10 @@ const logoSchema = z
     const m = /^data:image\/(png|jpeg|webp);base64,([A-Za-z0-9+/=]+)$/.exec(value);
     if (!m) {
       ctx.addIssue({ code: "custom", message: "Le logo doit être une image PNG, JPEG ou WebP." });
+      return z.NEVER;
+    }
+    if (!matchesImageSignature(m[1] as "png" | "jpeg" | "webp", m[2])) {
+      ctx.addIssue({ code: "custom", message: "Ce fichier n'est pas une vraie image. Choisissez un logo PNG, JPEG ou WebP." });
       return z.NEVER;
     }
     if (Math.floor((m[2].length * 3) / 4) > LOGO_MAX_BYTES) {

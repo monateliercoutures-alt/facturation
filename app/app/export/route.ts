@@ -5,11 +5,15 @@ import { DOCUMENT_LABELS, invoiceStatus, methodLabel, statusLabel, todayISO, typ
 import { toCsv } from "@/lib/stats/csv";
 import { dateOf, resolvePeriod } from "@/lib/stats/period";
 import { formatDate } from "@/lib/format";
+import { effectivePlan, PLAN_FEATURES } from "@/lib/plans";
 import { requireUser } from "@/lib/session";
+import { redirect } from "next/navigation";
 
 /** Export CSV de la période : documents ou paiements. Toujours limité aux données de l'utilisateur connecté. */
 export async function GET(request: Request) {
   const user = await requireUser();
+  // Export CSV : plan Business (contrôle côté serveur, le bouton masqué ne suffit pas).
+  if (!PLAN_FEATURES[effectivePlan(user)].csvExport) redirect("/app/abonnement?limite=export");
   const url = new URL(request.url);
   const today = todayISO();
   const period = resolvePeriod(url.searchParams.get("p") ?? undefined, today, url.searchParams.get("from") ?? undefined, url.searchParams.get("to") ?? undefined);

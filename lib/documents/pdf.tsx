@@ -1,6 +1,7 @@
 import { Document, Image, Page, renderToBuffer, StyleSheet, Text, View } from "@react-pdf/renderer";
 import { DOCUMENT_LABELS } from "@/lib/documents/calc";
 import type { SheetData } from "@/lib/documents/sheet";
+import { MENTION_TEXT } from "@/lib/plans";
 import { amountSentence } from "@/lib/documents/words";
 import { formatAmount, formatDate, formatFCFA } from "@/lib/format";
 import { formatPhone } from "@/lib/phone";
@@ -151,6 +152,7 @@ export function DocumentPdf({ data }: { data: SheetData }) {
             <Text style={s.signLine}> </Text>
           </View>
         </View>
+        {data.mention ? <Text style={{ position: "absolute", bottom: 20, left: 36, right: 36, textAlign: "center", fontSize: 8, color: MUTED }}>{MENTION_TEXT}</Text> : null}
       </Page>
     </Document>
   );

@@ -12,6 +12,8 @@ import { documentMessage, publicUrl, smsLink, whatsappLink } from "@/lib/documen
 import { toSheet } from "@/lib/documents/to-sheet";
 import { formatDate, formatFCFA } from "@/lib/format";
 import { appOrigin } from "@/lib/origin";
+import { UpgradeNotice } from "@/components/upgrade-notice";
+import { PLAN_FEATURES } from "@/lib/plans";
 import { requireUser } from "@/lib/session";
 
 export const metadata: Metadata = { title: "Document" };
@@ -51,7 +53,8 @@ export default async function DocumentPage({ params, searchParams }: { params: P
       {!cancelled ? (
         <section className="card mb-4" aria-label="Envoyer">
           <a className="btn btn-orange" href={whatsappLink(client?.phone, message)} target="_blank" rel="noopener noreferrer">Envoyer sur WhatsApp</a>
-          {mail ? <a className="btn mt-2" href={mail}>Envoyer par e-mail</a> : null}
+          {mail && PLAN_FEATURES[view.ownerPlan].email ? <a className="btn mt-2" href={mail}>Envoyer par e-mail</a> : null}
+          {!PLAN_FEATURES[view.ownerPlan].email ? <div className="mt-2"><UpgradeNotice compact title="L’envoi par e-mail est réservé au plan Pro" /></div> : null}
           <a className="btn btn-ghost mt-2" href={`/app/documents/${doc.id}/pdf`} target="_blank" rel="noopener noreferrer">Télécharger le PDF</a>
           <div className="mt-2 grid grid-cols-2 gap-2">
             <CopyButton text={link} />
@@ -78,7 +81,13 @@ export default async function DocumentPage({ params, searchParams }: { params: P
                     <p className="text-sm font-semibold text-g">Payée le {formatDate(i.paidAt)}{i.method ? ` · ${PAYMENT_METHODS.find((m) => m.key === i.method)?.label ?? i.method}` : ""}</p>
                     <button name="action" value="unpay" className="min-h-11 cursor-pointer text-sm font-semibold text-mut underline">Annuler</button>
                   </form>
-                ) : !cancelled ? (
+                ) : null}
+                {i.paidAt && client?.phone ? (
+                  <a className="mt-1 inline-flex min-h-11 items-center text-sm font-bold text-g underline" target="_blank" rel="noopener noreferrer" href={whatsappLink(client.phone, `Bonjour ${client.name}, nous confirmons la réception de votre paiement de ${formatFCFA(i.amount)} (${i.label.toLowerCase()}) pour la facture ${doc.number}. Merci pour votre confiance.`)}>
+                    Confirmer le paiement au client sur WhatsApp
+                  </a>
+                ) : null}
+                {!i.paidAt && !cancelled ? (
                   <form action={setInstallmentPaidAction.bind(null, doc.id)} className="mt-2 grid grid-cols-2 gap-2">
                     <input type="hidden" name="installmentId" value={i.id} />
                     <div>

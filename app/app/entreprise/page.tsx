@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { getCompanyForUser } from "@/lib/company";
+import { effectivePlan, PLAN_FEATURES } from "@/lib/plans";
 import { requireUser } from "@/lib/session";
 import { CompanyForm } from "./company-form";
 
@@ -11,7 +12,7 @@ export default async function CompanyPage({ searchParams }: { searchParams: Prom
   return (
     <>
       <h1 className="mb-4 text-2xl font-extrabold tracking-tight">Mon entreprise</h1>
-      <CompanyForm company={company} welcome={bienvenue === "1" && !company} />
+      <CompanyForm company={company} welcome={bienvenue === "1" && !company} canLogo={PLAN_FEATURES[effectivePlan(user)].logo} />
     </>
   );
 }

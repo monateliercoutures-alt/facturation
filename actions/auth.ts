@@ -1,6 +1,8 @@
 "use server";
 
-import { AuthError } from "next-auth";
+import { CredentialsSignin, AuthError } from "next-auth";
+import { headers } from "next/headers";
+import { clientIp, hit, RULES } from "@/lib/rate-limit";
 import { signIn, signOut } from "@/auth";
 import { getDb } from "@/lib/db";
 import { users } from "@/lib/db/schema";
@@ -26,6 +28,9 @@ export async function signUpAction(_prev: FormState, formData: FormData): Promis
   if (!parsed.success) return { errors: fieldErrors(parsed.error), values: kept };
 
   const { name, phone, email, password } = parsed.data;
+  // Limitation des inscriptions : 5 par heure et par adresse IP.
+  const limit = await hit(getDb(), `signup:${clientIp(await headers())}`, RULES.signup);
+  if (!limit.allowed) return { message: "Trop d'inscriptions depuis cette connexion. Réessayez dans une heure.", values: kept };
   const inserted = await getDb()
     .insert(users)
     .values({ name, phone, email, passwordHash: await hashPassword(password), role: isAdminPhone(phone) ? "admin" : "user" })
@@ -50,6 +55,9 @@ export async function signInAction(_prev: FormState, formData: FormData): Promis
       redirectTo: safeRedirect(formData.get("callbackUrl"), "/app"),
     });
   } catch (error) {
+    if (error instanceof CredentialsSignin && error.code === "limite") {
+      return { message: "Trop de tentatives. Patientez 15 minutes avant de réessayer.", values: kept };
+    }
     if (error instanceof AuthError) {
       return { message: "Numéro ou mot de passe incorrect. Vérifiez-les puis réessayez.", values: kept };
     }

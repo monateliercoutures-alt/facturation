@@ -5,13 +5,31 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { getDb } from "@/lib/db";
 import { documents, installments } from "@/lib/db/schema";
-import { createDocument, DocumentError, refreshInvoiceStatus } from "@/lib/documents/service";
+import { createDocument, DocumentError, PlanLimitError, refreshInvoiceStatus } from "@/lib/documents/service";
 import { documentInputSchema, paymentUpdateSchema } from "@/lib/documents/schema";
 import { requireUser } from "@/lib/session";
 
 export type DocumentFormState = { ok: false; message: string; errors?: Record<string, string> };
 
 /** Enregistre un document puis ouvre sa page. Renvoie les erreurs de saisie sans rien enregistrer. */
+export type SyncResult = { ok: true; id: string } | { ok: false; message: string };
+
+/** Envoi d'un brouillon créé hors connexion : mêmes contrôles que la création, sans redirection. */
+export async function syncDraftAction(input: unknown): Promise<SyncResult> {
+  const user = await requireUser();
+  const parsed = documentInputSchema.safeParse(input);
+  if (!parsed.success) return { ok: false, message: parsed.error.issues[0]?.message ?? "Brouillon invalide." };
+  try {
+    const id = await createDocument(user.id, parsed.data);
+    revalidatePath("/app", "layout");
+    return { ok: true, id };
+  } catch (e) {
+    if (e instanceof PlanLimitError) return { ok: false, message: "Limite de votre plan atteinte : passez au plan Pro pour envoyer ce brouillon." };
+    if (e instanceof DocumentError) return { ok: false, message: e.message };
+    throw e;
+  }
+}
+
 export async function createDocumentAction(input: unknown): Promise<DocumentFormState> {
   const user = await requireUser();
   const parsed = documentInputSchema.safeParse(input);
@@ -24,6 +42,8 @@ export async function createDocumentAction(input: unknown): Promise<DocumentForm
   try {
     id = await createDocument(user.id, parsed.data);
   } catch (e) {
+    // Limite du plan : page claire « Passez au plan Pro », jamais une erreur technique.
+    if (e instanceof PlanLimitError) redirect(`/app/abonnement?limite=${e.kind}`);
     if (e instanceof DocumentError) return { ok: false, message: e.message, errors: e.field ? { [e.field]: e.message } : undefined };
     throw e;
   }

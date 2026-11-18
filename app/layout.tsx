@@ -8,6 +8,8 @@ export const metadata: Metadata = {
   title: { default: "FactureCI – Votre facture en 30 secondes", template: "%s · FactureCI" },
   description: "Factures, devis et bons de livraison en FCFA, depuis votre téléphone. Envoi sur WhatsApp, paiement en tranches.",
   applicationName: "FactureCI",
+  icons: { icon: [{ url: "/icons/icon-192.png", sizes: "192x192", type: "image/png" }], apple: "/icons/apple-touch-icon.png" },
+  appleWebApp: { capable: true, title: "FactureCI", statusBarStyle: "default" },
 };
 
 export const viewport: Viewport = {

@@ -5,10 +5,15 @@ import { getDb } from "@/lib/db";
 import { users } from "@/lib/db/schema";
 import { verifyAgainstDummy, verifyPassword } from "@/lib/password";
 import { isAdminPhone } from "@/lib/phone";
+import { clientIp, hit, RULES } from "@/lib/rate-limit";
 import { signInSchema } from "@/lib/validation";
 
 class InvalidCredentials extends CredentialsSignin {
   code = "identifiants";
+}
+
+class TooManyAttempts extends CredentialsSignin {
+  code = "limite";
 }
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
@@ -18,11 +23,15 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   providers: [
     Credentials({
       credentials: { phone: { label: "Téléphone" }, password: { label: "Mot de passe", type: "password" } },
-      async authorize(raw) {
+      async authorize(raw, request) {
         const parsed = signInSchema.safeParse(raw);
         if (!parsed.success) throw new InvalidCredentials();
         const { phone, password } = parsed.data;
         const db = getDb();
+        // Limitation des tentatives : par (adresse IP, numéro) puis par adresse IP seule.
+        const ip = clientIp(request.headers);
+        const [byAccount, byIp] = [await hit(db, `login:${ip}:${phone}`, RULES.login), await hit(db, `login-ip:${ip}`, RULES.loginIp)];
+        if (!byAccount.allowed || !byIp.allowed) throw new TooManyAttempts();
         const [user] = await db.select().from(users).where(eq(users.phone, phone)).limit(1);
         if (!user) {
           await verifyAgainstDummy(password);

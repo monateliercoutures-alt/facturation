@@ -162,3 +162,30 @@ describe("indicateurs admin", () => {
     expect(computeAdminStats([], 0, now).conversionRate).toBeNull();
   });
 });
+
+import { daysUntilExpiry, effectivePlan, PLAN_FEATURES } from "@/lib/plans";
+
+describe("plan effectif", () => {
+  const now = new Date("2026-11-18T12:00:00Z");
+  it("retombe sur Gratuit à l'expiration, sans toucher aux données", () => {
+    expect(effectivePlan({ plan: "pro", planExpiresAt: new Date("2026-11-01T00:00:00Z") }, now)).toBe("free");
+    expect(effectivePlan({ plan: "pro", planExpiresAt: new Date("2026-12-01T00:00:00Z") }, now)).toBe("pro");
+    expect(effectivePlan({ plan: "business", planExpiresAt: new Date("2026-12-01T00:00:00Z") }, now)).toBe("business");
+  });
+  it("un administrateur n'est jamais limité", () => {
+    expect(effectivePlan({ plan: "free", planExpiresAt: null, role: "admin" }, now)).toBe("business");
+  });
+  it("droits par plan", () => {
+    expect(PLAN_FEATURES.free.documentsPerMonth).toBe(5);
+    expect(PLAN_FEATURES.free.pdfMention).toBe(true);
+    expect(PLAN_FEATURES.pro.pdfMention).toBe(false);
+    expect(PLAN_FEATURES.pro.csvExport).toBe(false);
+    expect(PLAN_FEATURES.business.csvExport).toBe(true);
+    expect(PLAN_FEATURES.business.users).toBe(3);
+  });
+  it("rappel : jours restants avant la fin", () => {
+    expect(daysUntilExpiry({ plan: "pro", planExpiresAt: new Date("2026-11-22T11:00:00Z") }, now)).toBe(4);
+    expect(daysUntilExpiry({ plan: "pro", planExpiresAt: new Date("2026-11-01T00:00:00Z") }, now)).toBeNull();
+    expect(daysUntilExpiry({ plan: "free", planExpiresAt: null }, now)).toBeNull();
+  });
+});

@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { signOutAction } from "@/actions/auth";
+import { SignOutForm } from "@/components/signout-form";
 import { Logo } from "@/components/logo";
 import { requireAdmin } from "@/lib/session";
 
@@ -14,7 +15,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
         </div>
         <div className="flex items-center gap-1">
           <Link href="/app" className="flex min-h-12 items-center rounded-xl px-3 text-sm font-semibold text-g">Mon espace</Link>
-          <form action={signOutAction}><button className="min-h-12 cursor-pointer rounded-xl px-3 text-sm font-semibold text-mut">Se déconnecter</button></form>
+          <SignOutForm action={signOutAction} className="min-h-12 cursor-pointer rounded-xl px-3 text-sm font-semibold text-mut" />
         </div>
       </header>
       <main>{children}</main>

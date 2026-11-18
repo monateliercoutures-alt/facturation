@@ -1,5 +1,6 @@
 import "server-only";
 import type { DocumentView } from "@/lib/documents/service";
+import { PLAN_FEATURES } from "@/lib/plans";
 import { paymentLinesFor, type SheetData } from "@/lib/documents/sheet";
 
 export function toSheet(view: DocumentView): SheetData {
@@ -11,7 +12,8 @@ export function toSheet(view: DocumentView): SheetData {
     dueDate: doc.dueDate,
     company: {
       name: company?.name ?? "Votre entreprise",
-      logo: company?.logo ?? null,
+      // Le logo est une fonction du plan Pro : masqué (mais conservé) si le plan est retombé sur Gratuit.
+      logo: PLAN_FEATURES[view.ownerPlan].logo ? (company?.logo ?? null) : null,
       rccm: company?.rccm ?? null,
       taxNumber: company?.taxNumber ?? null,
       address: company?.address ?? null,
@@ -30,6 +32,7 @@ export function toSheet(view: DocumentView): SheetData {
     note: doc.note,
     deliveryAddress: doc.deliveryAddress,
     deliveredBy: doc.deliveredBy,
+    mention: PLAN_FEATURES[view.ownerPlan].pdfMention,
   };
 }
 

@@ -1,3 +1,4 @@
+import { MENTION_TEXT } from "@/lib/plans";
 import { amountSentence } from "@/lib/documents/words";
 import { DOCUMENT_LABELS } from "@/lib/documents/calc";
 import type { SheetData } from "@/lib/documents/sheet";
@@ -131,6 +132,7 @@ export function DocumentSheet({ data }: { data: SheetData }) {
           <p className="border-t border-[#12261C]/40 pt-1 text-xs text-[#5B6B62]">&nbsp;</p>
         </div>
       </footer>
+      {data.mention ? <p className="mt-4 text-center text-xs text-[#5B6B62]">{MENTION_TEXT}</p> : null}
     </article>
   );
 }

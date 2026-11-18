@@ -4,6 +4,10 @@ import { redirect } from "next/navigation";
 import { getCompanyForUser } from "@/lib/company";
 import { PAYMENT_METHODS, todayISO, type PaymentMethodKey } from "@/lib/documents/calc";
 import { getDocumentForUser, listClientNames } from "@/lib/documents/service";
+import { UpgradeNotice } from "@/components/upgrade-notice";
+import { countDocumentsThisMonth } from "@/lib/documents/service";
+import { getDb } from "@/lib/db";
+import { effectivePlan, PLAN_FEATURES } from "@/lib/plans";
 import { requireUser } from "@/lib/session";
 import { formatPhone } from "@/lib/phone";
 import { DocumentForm, type FormInitial } from "./document-form";
@@ -27,6 +31,19 @@ export default async function NewDocumentPage({ searchParams }: { searchParams: 
           Renseigner mon entreprise
         </Link>
       </section>
+    );
+  }
+
+  const plan = effectivePlan(user);
+  const limit = PLAN_FEATURES[plan].documentsPerMonth;
+  if (Number.isFinite(limit) && (await countDocumentsThisMonth(getDb(), user.id)) >= limit) {
+    return (
+      <>
+        <h1 className="mb-3 text-2xl font-extrabold tracking-tight">Limite du plan Gratuit atteinte</h1>
+        <UpgradeNotice title={`Vous avez créé vos ${limit} documents du mois`}>
+          Passez au plan Pro pour créer des documents sans limite, ajouter votre logo et retirer la mention « Créé avec FactureCI ».
+        </UpgradeNotice>
+      </>
     );
   }
 
@@ -82,7 +99,9 @@ export default async function NewDocumentPage({ searchParams }: { searchParams: 
         key={`${sp.from ?? "new"}-${sp.mode ?? ""}-${wanted}`}
         initial={initial}
         today={todayISO()}
-        company={{ name: company.name, logo: company.logo, rccm: company.rccm, taxNumber: company.taxNumber, address: company.address, phone: company.phone, paymentNumbers: company.paymentNumbers, defaultNote: company.defaultNote }}
+        mention={PLAN_FEATURES[plan].pdfMention}
+        userId={user.id}
+        company={{ name: company.name, logo: PLAN_FEATURES[plan].logo ? company.logo : null, rccm: company.rccm, taxNumber: company.taxNumber, address: company.address, phone: company.phone, paymentNumbers: company.paymentNumbers, defaultNote: company.defaultNote }}
         clients={clients}
       />
     </>

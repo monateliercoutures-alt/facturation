@@ -206,6 +206,13 @@ export const adminActions = pgTable(
   (t) => [index("admin_actions_created_at_idx").on(t.createdAt)],
 );
 
+/** Compteurs de limitation de débit (connexion, inscription), partagés entre toutes les instances. */
+export const rateLimits = pgTable("rate_limits", {
+  key: text("key").primaryKey(),
+  count: integer("count").notNull().default(0),
+  resetAt: timestamp("reset_at", { withTimezone: true }).notNull(),
+});
+
 export type User = typeof users.$inferSelect;
 export type Company = typeof companies.$inferSelect;
 export type DocumentType = (typeof documentType.enumValues)[number];

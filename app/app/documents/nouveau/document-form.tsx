@@ -16,6 +16,7 @@ import {
 import { paymentLinesFor, type SheetData } from "@/lib/documents/sheet";
 import type { PaymentNumbers } from "@/lib/db/schema";
 import { formatFCFA } from "@/lib/format";
+import { enqueue } from "@/lib/offline-queue";
 import { formatPhone } from "@/lib/phone";
 
 type DocType = "FAC" | "DEV" | "BL";
@@ -38,7 +39,7 @@ export type FormInitial = {
 
 const MOBILE_FIELDS = PAYMENT_METHODS.filter((m) => m.mobile);
 
-export function DocumentForm({ initial, company, clients, today }: { initial: FormInitial; company: CompanyInfo; clients: ClientOption[]; today: string }) {
+export function DocumentForm({ initial, company, clients, today, mention, userId }: { initial: FormInitial; company: CompanyInfo; clients: ClientOption[]; today: string; mention: boolean; userId: string }) {
   const [step, setStep] = useState(1);
   const [type, setType] = useState<DocType>(initial.type);
   const [client, setClient] = useState(initial.client);
@@ -56,6 +57,7 @@ export function DocumentForm({ initial, company, clients, today }: { initial: Fo
   const [deliveredBy, setDeliveredBy] = useState(initial.deliveredBy);
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
+  const [queued, setQueued] = useState(false);
 
   const isBL = type === "BL";
   const parsedItems = items.map((i) => ({ description: i.description.trim(), quantity: Number(i.quantity.replace(",", ".")), unitPrice: isBL ? 0 : Math.round(Number(i.unitPrice) || 0) }));
@@ -87,6 +89,7 @@ export function DocumentForm({ initial, company, clients, today }: { initial: Fo
       note: note || null,
       deliveryAddress: isBL ? client.address || null : null,
       deliveredBy: deliveredBy || null,
+      mention,
     }),
     // eslint-disable-next-line react-hooks/exhaustive-deps -- recalcul à chaque saisie
     [type, today, dueDate, company, client, items, discount, vat, count, deposit, overrides, instDates, methods, numbers, note, deliveredBy],
@@ -141,8 +144,20 @@ export function DocumentForm({ initial, company, clients, today }: { initial: Fo
       deliveryAddress: isBL ? client.address : null,
       deliveredBy: isBL ? deliveredBy : null,
     };
+    // Hors connexion : le brouillon est gardé sur le téléphone et envoyé au retour du réseau.
+    const queueDraft = () => {
+      if (enqueue(userId, payload, `${DOCUMENT_LABELS[type].singular} · ${client.name}`)) setQueued(true);
+      else setError("Impossible d'enregistrer le brouillon sur ce téléphone (stockage plein ?).");
+    };
+    if (!navigator.onLine) return queueDraft();
     startTransition(async () => {
-      const result = await createDocumentAction(payload);
+      let result;
+      try {
+        result = await createDocumentAction(payload);
+      } catch (e) {
+        if (!navigator.onLine) return queueDraft();
+        throw e; // redirection après succès, ou vraie erreur : laissée à Next.js
+      }
       if (result && !result.ok) {
         setError(result.message);
         setStep(result.errors && Object.keys(result.errors).some((k) => k.startsWith("client")) ? 1 : result.errors && Object.keys(result.errors).some((k) => k.startsWith("items")) ? 2 : step);
@@ -151,6 +166,15 @@ export function DocumentForm({ initial, company, clients, today }: { initial: Fo
   }
 
   const label = DOCUMENT_LABELS[type].singular;
+  if (queued) {
+    return (
+      <section className="card text-center" role="status">
+        <h2 className="mb-1 text-xl font-extrabold">Brouillon enregistré sur votre téléphone</h2>
+        <p className="mb-4 text-mut">Pas de réseau pour le moment. Votre {label.toLowerCase()} pour {client.name} sera créé et envoyé automatiquement dès que la connexion revient.</p>
+        <a href="/app" className="btn">Retour à l’accueil</a>
+      </section>
+    );
+  }
   return (
     <div>
       <div className="mb-1 h-1.5 overflow-hidden rounded-full bg-line" role="progressbar" aria-valuemin={1} aria-valuemax={3} aria-valuenow={step} aria-label="Progression">

@@ -2,7 +2,7 @@
 
 SaaS de facturation pour PME, artisans et freelances de Côte d'Ivoire. Mobile-first, en français, en FCFA. Porté par Krea Ecom.
 
-**État : Prompts 1 à 3 terminés.** Comptes, documents (factures, devis, bons de livraison), puis tableaux de bord utilisateur et admin. L'abonnement, la PWA et le déploiement arrivent au prompt 4 (voir `docs/PROMPTS.md`).
+**État : Prompts 1 à 4 terminés.** Comptes, documents, tableaux de bord, puis plans et abonnement, PWA, sécurité et guide de déploiement (`docs/DEPLOIEMENT.md`).
 
 Stack : Next.js 16 (App Router), TypeScript, Tailwind 4, Neon (PostgreSQL) + Drizzle, Auth.js, zod.
 
@@ -62,6 +62,39 @@ Un utilisateur dont le téléphone figure dans `ADMIN_PHONES` reçoit le rôle a
 - **Suspendre** coupe l'accès immédiatement (même avec une session ouverte) sans supprimer de données.
 - Migration `drizzle/0001_admin.sql` : colonne `users.suspended_at` et table `admin_actions`.
 
-## À faire aux prompts suivants
+## Plans et abonnement (Prompt 4)
 
-Limitation des tentatives de connexion et d'inscription, plans et limites, demande de paiement côté utilisateur, PWA, déploiement (Prompt 4).
+| | Gratuit | Pro (4 900 FCFA/mois) | Business (9 900 FCFA/mois) |
+|---|---|---|---|
+| Documents | 5 par mois | illimités | illimités |
+| Logo | non | oui | oui |
+| Mention « Créé avec FactureCI » sur le PDF | oui | non | non |
+| Envoi par e-mail | non | oui | oui |
+| Tableau de bord complet, relances WhatsApp | non | oui | oui |
+| Export CSV | non | non | oui |
+| Carnet de clients | 20 | 100 | illimité |
+| Utilisateurs | 1 | 1 | 3 (voir « Reste à faire ») |
+
+- Droits et prix : `lib/plans.ts`. Le blocage est fait côté serveur (création de document sous verrou par utilisateur, export, logo) ; l'interface affiche une page « Passez au plan Pro ».
+- À l'expiration, le plan effectif retombe sur Gratuit (calculé, rien n'est supprimé). Un rappel s'affiche 5 jours avant la fin.
+- Paiement sans API : bouton « Payer avec Wave » (`WAVE_LINK_*`), saisie de la référence, demande « en cours de vérification », validation par l'admin dans `/admin`.
+- Les limites du carnet de clients (20 / 100) sont un choix de ce projet : le cahier des charges ne précise que « illimité » pour Business.
+
+## PWA et hors connexion
+
+- Manifeste, icônes 192/512/maskable, service worker `public/sw.js` (actif en production), bannière « Installer l'application », page `/hors-ligne`.
+- Le service worker met en cache les fichiers statiques et le formulaire « Nouveau document » seulement. Jamais les pages de données, les PDF, les liens publics ni l'export. Le cache des pages est vidé à la déconnexion.
+- Hors connexion, un document créé est gardé sur le téléphone (`localStorage`, par utilisateur) puis envoyé au retour du réseau. Il reçoit son numéro à l'envoi.
+
+## Sécurité
+
+Limitation des tentatives (connexion : 10 par 15 min et par couple IP/numéro, 60 par IP ; inscription : 5 par heure et par IP), compteurs en base. Sessions `HttpOnly` et `Secure`, en-têtes de sécurité (CSP, HSTS, anti-cadre), propriété vérifiée sur chaque ressource, logo : 2 Mo maximum avant redimensionnement, type vérifié sur les octets réels, aucune clé côté client.
+
+## Reste à faire (version 2)
+
+- Plusieurs utilisateurs sur la même entreprise (Business, jusqu'à 3) : annoncé « bientôt disponible », non construit.
+- Envoi d'e-mail avec le PDF en pièce jointe (Resend) : brancher un `EmailSender` dans `lib/documents/email.ts`.
+- Paiement automatique de l'abonnement (aujourd'hui : validation manuelle).
+- Relances programmées (aujourd'hui : un clic par relance).
+- Réinitialisation du mot de passe en libre-service (aujourd'hui : par l'admin).
+- CSP avec nonce (aujourd'hui `'unsafe-inline'` pour les scripts de démarrage de Next.js).

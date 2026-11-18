@@ -22,6 +22,8 @@ export type SheetData = {
   note: string | null;
   deliveryAddress: string | null;
   deliveredBy: string | null;
+  /** Affiche « Créé avec FactureCI » (plan Gratuit). */
+  mention?: boolean;
 };
 
 export function paymentLinesFor(methods: string[], numbers: PaymentNumbers): string[] {
