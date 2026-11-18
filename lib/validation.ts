@@ -21,7 +21,7 @@ export const phoneSchema = z
     return phone;
   });
 
-const optionalPhone = z
+export const optionalPhone = z
   .string()
   .trim()
   .optional()

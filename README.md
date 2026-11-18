@@ -2,7 +2,7 @@
 
 SaaS de facturation pour PME, artisans et freelances de Côte d'Ivoire. Mobile-first, en français, en FCFA. Porté par Krea Ecom.
 
-**État : Prompt 1 terminé (fondations).** Comptes (téléphone + mot de passe), profil de l'entreprise, base de données, compte admin. Les documents, tableaux de bord et abonnements arrivent aux prompts 2 à 4 (voir `docs/PROMPTS.md`).
+**État : Prompts 1 et 2 terminés.** Comptes, profil de l'entreprise, base de données, compte admin, puis factures, devis et bons de livraison (3 écrans, tranches, PDF, WhatsApp, lien public). Tableaux de bord et abonnements arrivent aux prompts 3 et 4 (voir `docs/PROMPTS.md`).
 
 Stack : Next.js 16 (App Router), TypeScript, Tailwind 4, Neon (PostgreSQL) + Drizzle, Auth.js, zod.
 
@@ -43,6 +43,15 @@ Un utilisateur dont le téléphone figure dans `ADMIN_PHONES` reçoit le rôle a
 - Toute requête de données filtre par `user_id` (`lib/session.ts` : `requireUser`). `proxy.ts` ne fait qu'une redirection optimiste ; l'autorisation est refaite dans chaque page et chaque action.
 - Numérotation `FAC-2026-001` : `lib/numbering.ts`, compteur incrémenté par UPSERT dans la transaction de création.
 - Mot de passe oublié : réinitialisation par l'admin (lien WhatsApp vers le premier numéro de `ADMIN_PHONES`).
+
+## Documents (Prompt 2)
+
+- Parcours en 3 étapes (`app/app/documents/nouveau`), aperçu en direct identique au PDF.
+- Calculs, tranches, statut : `lib/documents/calc.ts`. Montant en lettres : `lib/documents/words.ts`. Tous testés (`npm test`).
+- PDF côté serveur avec `@react-pdf/renderer` (`lib/documents/pdf.tsx`), privé : `/app/documents/[id]/pdf`, public : `/d/[token]/pdf`.
+- Lien client en lecture seule : `/d/[token]` (jeton aléatoire de 192 bits, page non indexée).
+- Envoi : liens `wa.me`, `sms:` et `mailto:` (`lib/documents/share.ts`). Couche e-mail séparée dans `lib/documents/email.ts` : pour brancher Resend, écrire un `EmailSender` de type `api` et remplacer `emailSender`.
+- Dupliquer, devis → facture, facture → bon de livraison : même formulaire, prérempli depuis le document d'origine (vérifié par `user_id`).
 
 ## À faire aux prompts suivants
 

@@ -1,13 +1,15 @@
 import Link from "next/link";
 import { getCompanyForUser } from "@/lib/company";
-import { formatDate } from "@/lib/format";
+import { StatusPill } from "@/components/status-pill";
+import { listDocuments } from "@/lib/documents/service";
+import { formatDate, formatFCFA } from "@/lib/format";
 import { requireUser } from "@/lib/session";
 
 const PLAN_LABELS = { free: "Gratuit", pro: "Pro", business: "Business" } as const;
 
 export default async function DashboardPage() {
   const user = await requireUser();
-  const company = await getCompanyForUser(user.id);
+  const [company, recent] = await Promise.all([getCompanyForUser(user.id), listDocuments(user.id, {}, 5).then((r) => r.slice(0, 5))]);
   const firstName = user.name.split(" ")[0];
   return (
     <>
@@ -40,9 +42,37 @@ export default async function DashboardPage() {
         </section>
       )}
 
+      <section className="mb-4 grid gap-2 sm:grid-cols-3" aria-label="Créer un document">
+        <Link href="/app/documents/nouveau?type=FAC" className="btn">+ Facture</Link>
+        <Link href="/app/documents/nouveau?type=DEV" className="btn btn-ghost">+ Devis</Link>
+        <Link href="/app/documents/nouveau?type=BL" className="btn btn-ghost">+ Bon de livraison</Link>
+      </section>
+
       <section className="card">
-        <h2 className="mb-1 text-lg font-extrabold">Factures, devis et bons de livraison</h2>
-        <p className="text-mut">La création de documents arrive à la prochaine étape.</p>
+        <div className="mb-2 flex items-center justify-between">
+          <h2 className="text-lg font-extrabold">Derniers documents</h2>
+          <Link href="/app/documents" className="text-sm font-semibold text-g underline">Tout voir</Link>
+        </div>
+        {recent.length === 0 ? (
+          <>
+            <p className="mb-3 text-mut">Vous n’avez pas encore de document.</p>
+            <Link href="/app/documents/nouveau" className="btn btn-orange">Créer ma première facture</Link>
+          </>
+        ) : (
+          <ul className="divide-y divide-line">
+            {recent.map((r) => (
+              <li key={r.id}>
+                <Link href={`/app/documents/${r.id}`} className="flex items-center justify-between gap-3 py-2.5 no-underline">
+                  <span className="min-w-0">
+                    <span className="block font-bold">{r.number}</span>
+                    <span className="block truncate text-sm text-mut">{r.clientName ?? "Client"}{r.type !== "BL" ? ` · ${formatFCFA(r.total)}` : ""}</span>
+                  </span>
+                  <StatusPill status={r.status} type={r.type} />
+                </Link>
+              </li>
+            ))}
+          </ul>
+        )}
       </section>
     </>
   );
