@@ -13,7 +13,7 @@ import { addDays, dateOf, daysBetween, last12Months, type Period } from "@/lib/s
 
 export type StatDoc = {
   id: string;
-  type: "FAC" | "DEV" | "BL";
+  type: "FAC" | "PRO" | "DEV" | "BL" | "BC";
   number: string;
   status: string;
   issueDate: string;

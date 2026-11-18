@@ -1,3 +1,4 @@
+import type { DocumentType } from "@/lib/db/schema";
 import { statusLabel, type DocumentStatus } from "@/lib/documents/calc";
 
 const STYLES: Record<DocumentStatus, string> = {
@@ -10,7 +11,7 @@ const STYLES: Record<DocumentStatus, string> = {
   delivered: "bg-g text-on",
 };
 
-export function StatusPill({ status, type }: { status: DocumentStatus; type?: "FAC" | "DEV" | "BL" }) {
+export function StatusPill({ status, type }: { status: DocumentStatus; type?: DocumentType }) {
   const label = statusLabel(status, type);
   return <span className={`inline-block rounded-full px-2.5 py-0.5 text-xs font-bold ${STYLES[status]}`}>{label}</span>;
 }

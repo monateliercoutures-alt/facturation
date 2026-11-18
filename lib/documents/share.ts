@@ -22,7 +22,7 @@ export function documentMessage(view: DocumentView, link: string): string {
   const label = DOCUMENT_LABELS[doc.type].singular;
   const lines: string[] = [`Bonjour ${client?.name ?? ""},`.replace(" ,", ","), ""];
   const from = company?.name ? ` de ${company.name}` : "";
-  if (doc.type === "BL") {
+  if (!DOCUMENT_LABELS[doc.type].priced) {
     lines.push(`Voici votre ${label.toLowerCase()} ${doc.number}${from}.`);
   } else {
     lines.push(`Voici votre ${label.toLowerCase()} ${doc.number}${from} d'un montant de ${formatFCFA(doc.total)}.`);

@@ -1,96 +1,125 @@
 import { Document, Image, Page, renderToBuffer, StyleSheet, Text, View } from "@react-pdf/renderer";
-import { DOCUMENT_LABELS } from "@/lib/documents/calc";
-import type { SheetData } from "@/lib/documents/sheet";
-import { MENTION_TEXT } from "@/lib/plans";
+import { deriveSheet, type SheetData } from "@/lib/documents/sheet";
 import { amountSentence } from "@/lib/documents/words";
 import { formatAmount, formatDate, formatFCFA } from "@/lib/format";
 import { formatPhone } from "@/lib/phone";
+import { MENTION_TEXT } from "@/lib/plans";
 
 const GREEN = "#0E6B43";
 const MUTED = "#5B6B62";
 const LINE = "#D9E2DB";
+const SOFT = "#F5F8F4";
 
 const s = StyleSheet.create({
-  page: { padding: 36, fontSize: 10, fontFamily: "Helvetica", color: "#12261C", lineHeight: 1.35 },
-  head: { flexDirection: "row", justifyContent: "space-between", marginBottom: 16 },
+  page: { paddingTop: 34, paddingHorizontal: 36, paddingBottom: 64, fontSize: 9.5, fontFamily: "Helvetica", color: "#12261C" },
+  head: { flexDirection: "row", justifyContent: "space-between", paddingBottom: 12, marginBottom: 12, borderBottomWidth: 2.5, borderBottomColor: GREEN },
   logo: { maxHeight: 44, maxWidth: 140, marginBottom: 4, objectFit: "contain" },
-  company: { fontSize: 13, fontFamily: "Helvetica-Bold" },
+  company: { fontSize: 14, fontFamily: "Helvetica-Bold" },
   muted: { color: MUTED },
   right: { textAlign: "right" },
-  title: { fontSize: 15, fontFamily: "Helvetica-Bold", color: GREEN, marginBottom: 4 },
+  title: { fontSize: 16, fontFamily: "Helvetica-Bold", color: GREEN, marginBottom: 3 },
   bold: { fontFamily: "Helvetica-Bold" },
-  box: { backgroundColor: "#F5F8F4", padding: 8, borderRadius: 6, marginBottom: 12 },
-  small: { fontSize: 8, color: MUTED, marginBottom: 2 },
-  th: { flexDirection: "row", borderBottomWidth: 1.5, borderBottomColor: GREEN, paddingBottom: 3, color: MUTED, fontSize: 8, fontFamily: "Helvetica-Bold" },
-  tr: { flexDirection: "row", borderBottomWidth: 0.5, borderBottomColor: LINE, paddingVertical: 4 },
+  parties: { flexDirection: "row", gap: 10, marginBottom: 10 },
+  box: { flex: 1, backgroundColor: SOFT, padding: 8, borderRadius: 6 },
+  small: { fontSize: 7.5, color: MUTED, marginBottom: 2, fontFamily: "Helvetica-Bold" },
+  th: { flexDirection: "row", backgroundColor: GREEN, color: "#fff", fontSize: 8, fontFamily: "Helvetica-Bold", paddingVertical: 5, paddingHorizontal: 4 },
+  tr: { flexDirection: "row", paddingVertical: 4, paddingHorizontal: 4 },
+  zebra: { backgroundColor: SOFT },
   cDesc: { flex: 1, paddingRight: 6 },
-  cQty: { width: 36, textAlign: "right" },
-  cPrice: { width: 72, textAlign: "right" },
+  cQty: { width: 56, textAlign: "right" },
+  cUnit: { width: 44, paddingLeft: 6 },
+  cPrice: { width: 70, textAlign: "right" },
   cAmount: { width: 76, textAlign: "right" },
-  totals: { alignSelf: "flex-end", width: 220, marginTop: 8, marginBottom: 8 },
+  cObs: { width: 120, paddingLeft: 6 },
+  totals: { alignSelf: "flex-end", width: 230, marginTop: 8, marginBottom: 8 },
   tot: { flexDirection: "row", justifyContent: "space-between", paddingVertical: 1.5 },
-  grand: { flexDirection: "row", justifyContent: "space-between", borderTopWidth: 1.5, borderTopColor: GREEN, paddingTop: 4, marginTop: 2, fontSize: 12, fontFamily: "Helvetica-Bold" },
+  grand: { flexDirection: "row", justifyContent: "space-between", backgroundColor: GREEN, color: "#fff", paddingVertical: 4, paddingHorizontal: 6, marginVertical: 2, borderRadius: 4, fontSize: 11, fontFamily: "Helvetica-Bold" },
   h: { fontFamily: "Helvetica-Bold", marginBottom: 3 },
   inst: { flexDirection: "row", justifyContent: "space-between", paddingVertical: 3, borderBottomWidth: 0.5, borderBottomColor: LINE },
-  sign: { flexDirection: "row", gap: 24, marginTop: 26 },
-  signCol: { flex: 1 },
-  signLine: { borderTopWidth: 0.7, borderTopColor: "#12261C", marginTop: 40, paddingTop: 2, fontSize: 8, color: MUTED },
+  sign: { flexDirection: "row", gap: 10, marginTop: 18 },
+  signBox: { flex: 1, backgroundColor: SOFT, padding: 8, borderRadius: 6, minHeight: 78 },
+  signLine: { borderTopWidth: 0.7, borderTopColor: "#12261C", marginTop: 38, paddingTop: 2, fontSize: 7.5, color: MUTED },
+  footer: { position: "absolute", bottom: 18, left: 36, right: 36, borderTopWidth: 0.7, borderTopColor: LINE, paddingTop: 5, textAlign: "center", fontSize: 7.5, color: MUTED },
 });
 
 export function DocumentPdf({ data }: { data: SheetData }) {
-  const isBL = data.type === "BL";
-  const label = DOCUMENT_LABELS[data.type];
+  const d = deriveSheet(data);
+  const { traits, isBL } = d;
   // @react-pdf ne lit que PNG et JPEG : un logo WebP est ignoré plutôt que de faire échouer le PDF.
   const logo = data.company.logo && /^data:image\/(png|jpeg);/.test(data.company.logo) ? data.company.logo : null;
+  const shipTo = isBL ? (data.deliveryAddress ?? data.client.address) : data.deliveryAddress;
   return (
-    <Document title={`${label.singular} ${data.number}`} author={data.company.name} language="fr">
+    <Document title={`${traits.singular} ${data.number}`} author={data.company.name} language="fr">
       <Page size="A4" style={s.page}>
         <View style={s.head}>
           <View style={{ maxWidth: 300 }}>
             {/* eslint-disable-next-line jsx-a11y/alt-text -- composant PDF, pas une balise HTML */}
             {logo ? <Image src={logo} style={s.logo} /> : null}
             <Text style={s.company}>{data.company.name}</Text>
-            {data.company.rccm ? <Text style={s.muted}>RCCM : {data.company.rccm}</Text> : null}
-            {data.company.taxNumber ? <Text style={s.muted}>CC : {data.company.taxNumber}</Text> : null}
+            {data.company.tagline ? <Text style={[s.muted, { fontFamily: "Helvetica-Oblique" }]}>{data.company.tagline}</Text> : null}
             {data.company.address ? <Text style={s.muted}>{data.company.address}</Text> : null}
-            {data.company.phone ? <Text style={s.muted}>{formatPhone(data.company.phone)}</Text> : null}
+            {d.contact.length ? <Text style={s.muted}>{d.contact.join("  ·  ")}</Text> : null}
+            {d.identity.length ? <Text style={s.muted}>{d.identity.join("  ·  ")}</Text> : null}
           </View>
           <View style={s.right}>
-            <Text style={s.title}>{label.upper}</Text>
-            <Text style={s.bold}>{data.number}</Text>
+            <Text style={s.title}>{traits.upper}</Text>
+            <Text style={[s.bold, { fontSize: 11 }]}>N° {data.number}</Text>
             <Text style={s.muted}>Date : {formatDate(data.issueDate)}</Text>
-            {data.dueDate && !isBL ? <Text style={s.muted}>Échéance : {formatDate(data.dueDate)}</Text> : null}
+            {data.dueDate ? <Text style={s.bold}>{traits.dueLabel} : {formatDate(data.dueDate)}</Text> : null}
+            {data.clientReference ? <Text style={s.muted}>Réf. : {data.clientReference}</Text> : null}
           </View>
         </View>
 
-        <View style={s.box}>
-          <Text style={s.small}>{isBL ? "LIVRÉ À" : "CLIENT"}</Text>
-          <Text style={s.bold}>{data.client.name}</Text>
-          {data.client.phone ? <Text>{formatPhone(data.client.phone)}</Text> : null}
-          {isBL && data.deliveryAddress ? <Text>{data.deliveryAddress}</Text> : !isBL && data.client.address ? <Text>{data.client.address}</Text> : null}
+        <View style={s.parties} wrap={false}>
+          <View style={s.box}>
+            <Text style={s.small}>{traits.party.toUpperCase()}</Text>
+            <Text style={s.bold}>{data.client.name}</Text>
+            {isBL ? (shipTo ? <Text>{shipTo}</Text> : null) : data.client.address ? <Text>{data.client.address}</Text> : null}
+            {data.client.phone ? <Text>{formatPhone(data.client.phone)}</Text> : null}
+            {data.client.email ? <Text>{data.client.email}</Text> : null}
+          </View>
+          {d.showShipTo ? (
+            <View style={s.box}>
+              <Text style={s.small}>LIVRAISON</Text>
+              <Text>{data.deliveryAddress}</Text>
+            </View>
+          ) : null}
         </View>
 
-        <View style={s.th}>
+        {data.subject ? (
+          <Text style={{ marginBottom: 8 }}>
+            <Text style={s.bold}>Objet : </Text>
+            {data.subject}
+          </Text>
+        ) : null}
+
+        <View style={s.th} fixed>
           <Text style={s.cDesc}>DÉSIGNATION</Text>
-          <Text style={s.cQty}>QTÉ</Text>
+          <Text style={s.cQty}>{isBL ? "COMMANDÉ" : "QTÉ"}</Text>
+          {isBL ? <Text style={s.cQty}>LIVRÉ</Text> : null}
+          {d.showUnit ? <Text style={s.cUnit}>UNITÉ</Text> : null}
           {!isBL ? <Text style={s.cPrice}>PRIX UNIT.</Text> : null}
           {!isBL ? <Text style={s.cAmount}>MONTANT</Text> : null}
+          {d.showObservations ? <Text style={s.cObs}>OBSERVATIONS</Text> : null}
         </View>
         {data.items.map((i, n) => (
-          <View key={n} style={s.tr} wrap={false}>
+          <View key={n} style={[s.tr, n % 2 ? s.zebra : {}]} wrap={false}>
             <Text style={s.cDesc}>{i.description}</Text>
             <Text style={s.cQty}>{i.quantity}</Text>
+            {isBL ? <Text style={[s.cQty, s.bold]}>{i.quantityDelivered ?? i.quantity}</Text> : null}
+            {d.showUnit ? <Text style={s.cUnit}>{i.unit ?? ""}</Text> : null}
             {!isBL ? <Text style={s.cPrice}>{formatAmount(i.unitPrice)}</Text> : null}
-            {!isBL ? <Text style={s.cAmount}>{formatAmount(Math.round(i.quantity * i.unitPrice))}</Text> : null}
+            {!isBL ? <Text style={[s.cAmount, s.bold]}>{formatAmount(Math.round(i.quantity * i.unitPrice))}</Text> : null}
+            {d.showObservations ? <Text style={s.cObs}>{i.observation ?? ""}</Text> : null}
           </View>
         ))}
 
-        {!isBL ? (
+        {traits.priced ? (
           <>
-            <View style={s.totals}>
-              {data.discountAmount > 0 || data.vatAmount > 0 ? (
+            <View style={s.totals} wrap={false}>
+              {data.discountAmount > 0 || d.hasVat ? (
                 <View style={s.tot}>
-                  <Text>Sous-total</Text>
+                  <Text>{data.discountAmount > 0 ? "Sous-total" : "Total HT"}</Text>
                   <Text>{formatFCFA(data.subtotal)}</Text>
                 </View>
               ) : null}
@@ -100,22 +129,40 @@ export function DocumentPdf({ data }: { data: SheetData }) {
                   <Text>- {formatFCFA(data.discountAmount)}</Text>
                 </View>
               ) : null}
-              {data.vatPercent > 0 ? (
+              {data.discountAmount > 0 && d.hasVat ? (
+                <View style={s.tot}>
+                  <Text>Total HT</Text>
+                  <Text>{formatFCFA(d.netHt)}</Text>
+                </View>
+              ) : null}
+              {d.hasVat ? (
                 <View style={s.tot}>
                   <Text>TVA ({data.vatPercent} %)</Text>
                   <Text>{formatFCFA(data.vatAmount)}</Text>
                 </View>
               ) : null}
               <View style={s.grand}>
-                <Text>Total</Text>
+                <Text>{d.totalLabel}</Text>
                 <Text>{formatFCFA(data.total)}</Text>
               </View>
+              {d.paid > 0 && d.paid < data.total ? (
+                <>
+                  <View style={s.tot}>
+                    <Text>Déjà réglé</Text>
+                    <Text>- {formatFCFA(d.paid)}</Text>
+                  </View>
+                  <View style={[s.tot, s.bold]}>
+                    <Text>Reste à payer</Text>
+                    <Text>{formatFCFA(d.remaining)}</Text>
+                  </View>
+                </>
+              ) : null}
             </View>
             <Text style={{ fontFamily: "Helvetica-Oblique", marginBottom: 10 }}>{amountSentence(data.total)}</Text>
 
             {data.installments.length > 1 ? (
               <View style={{ marginBottom: 10 }} wrap={false}>
-                <Text style={s.h}>Paiement en tranches</Text>
+                <Text style={s.h}>Conditions de règlement</Text>
                 {data.installments.map((t, n) => (
                   <View key={n} style={s.inst}>
                     <Text>
@@ -132,9 +179,15 @@ export function DocumentPdf({ data }: { data: SheetData }) {
             ) : null}
 
             {data.paymentLines.length > 0 ? (
-              <View style={{ marginBottom: 10 }}>
+              <View style={{ marginBottom: 10 }} wrap={false}>
                 <Text style={s.h}>Moyens de paiement acceptés</Text>
                 <Text>{data.paymentLines.join("  ·  ")}</Text>
+                {d.bankVisible ? (
+                  <Text style={{ marginTop: 3 }}>
+                    <Text style={s.bold}>Coordonnées bancaires : </Text>
+                    {data.company.bankDetails}
+                  </Text>
+                ) : null}
               </View>
             ) : null}
           </>
@@ -143,16 +196,22 @@ export function DocumentPdf({ data }: { data: SheetData }) {
         {data.note ? <Text style={[s.muted, { marginBottom: 8 }]}>{data.note}</Text> : null}
 
         <View style={s.sign} wrap={false}>
-          <View style={s.signCol}>
-            <Text style={s.bold}>{isBL ? "Le livreur" : "Le prestataire"}</Text>
+          <View style={s.signBox}>
+            <Text style={[s.bold, { fontSize: 8 }]}>{traits.signLeft}</Text>
             <Text style={s.signLine}>{isBL && data.deliveredBy ? data.deliveredBy : "Signature"}</Text>
           </View>
-          <View style={s.signCol}>
-            <Text style={s.bold}>{isBL ? "Reçu par (nom, date, signature)" : "Cachet et signature du client"}</Text>
-            <Text style={s.signLine}> </Text>
+          <View style={s.signBox}>
+            <Text style={[s.bold, { fontSize: 8 }]}>{traits.signRight}</Text>
+            <Text style={s.signLine}>Date et signature</Text>
           </View>
         </View>
-        {data.mention ? <Text style={{ position: "absolute", bottom: 20, left: 36, right: 36, textAlign: "center", fontSize: 8, color: MUTED }}>{MENTION_TEXT}</Text> : null}
+
+        <View style={s.footer} fixed>
+          {traits.priced ? <Text style={[s.bold, { color: "#12261C", marginBottom: 2 }]}>Merci de votre confiance.{d.contact.length ? ` Une question sur ce document ? ${d.contact.slice(0, 2).join("  ·  ")}` : ""}</Text> : null}
+          <Text>{[data.company.name, ...d.identity].join("  ·  ")}</Text>
+          {data.mention ? <Text>{MENTION_TEXT}</Text> : null}
+        </View>
+        <Text fixed style={{ position: "absolute", bottom: 8, left: 36, right: 36, textAlign: "center", fontSize: 7.5, color: MUTED }} render={({ pageNumber, totalPages }) => `Page ${pageNumber} / ${totalPages}`} />
       </Page>
     </Document>
   );

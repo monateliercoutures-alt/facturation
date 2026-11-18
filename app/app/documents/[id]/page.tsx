@@ -31,7 +31,7 @@ export default async function DocumentPage({ params, searchParams }: { params: P
   const mail = emailSender.kind === "link" ? emailSender.prepare({ to: client?.email ?? null, subject: `${label.singular} ${doc.number}`, body: message }).href : null;
   const today = todayISO();
   const cancelled = view.status === "cancelled";
-  const feminine = doc.type !== "DEV" && doc.type !== "BL";
+  const feminine = label.feminine;
   const paidTotal = view.installments.filter((i) => i.paidAt).reduce((s, i) => s + i.amount, 0);
 
   return (
@@ -114,7 +114,8 @@ export default async function DocumentPage({ params, searchParams }: { params: P
         <h2 className="mb-2 text-lg font-extrabold">Autres actions</h2>
         <div className="grid gap-2">
           <Link className="btn btn-ghost" href={`/app/documents/nouveau?from=${doc.id}&mode=duplicate`}>Dupliquer</Link>
-          {doc.type === "DEV" ? <Link className="btn btn-ghost" href={`/app/documents/nouveau?from=${doc.id}&mode=facture`}>Transformer en facture</Link> : null}
+          {doc.type === "DEV" || doc.type === "PRO" ? <Link className="btn btn-ghost" href={`/app/documents/nouveau?from=${doc.id}&mode=facture`}>Transformer en facture</Link> : null}
+          {doc.type === "DEV" ? <Link className="btn btn-ghost" href={`/app/documents/nouveau?from=${doc.id}&mode=pro`}>Créer une facture pro forma</Link> : null}
           {doc.type === "FAC" ? <Link className="btn btn-ghost" href={`/app/documents/nouveau?from=${doc.id}&mode=bl`}>Créer un bon de livraison</Link> : null}
           {doc.type === "BL" && view.status !== "delivered" ? (
             <form action={markDeliveredAction.bind(null, doc.id)}><button className="btn">Marquer comme livré</button></form>

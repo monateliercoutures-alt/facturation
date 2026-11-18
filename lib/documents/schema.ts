@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { MAX_INSTALLMENTS, PAYMENT_METHOD_KEYS } from "@/lib/documents/calc";
+import { DOCUMENT_TYPES, MAX_INSTALLMENTS, PAYMENT_METHOD_KEYS } from "@/lib/documents/calc";
 import { optionalPhone } from "@/lib/validation";
 
 const text = (max: number) => z.string().trim().max(max, `${max} caractères maximum.`);
@@ -18,10 +18,19 @@ export const itemSchema = z.object({
   description: text(300).min(1, "Décrivez cette ligne."),
   quantity: z.number({ error: "Quantité invalide." }).positive("La quantité doit être supérieure à 0.").max(1_000_000, "Quantité trop grande."),
   unitPrice: z.number({ error: "Prix invalide." }).int("Le prix doit être un nombre entier de FCFA.").min(0, "Le prix ne peut pas être négatif.").max(1_000_000_000, "Prix trop grand."),
+  unit: optText(20),
+  /** Bon de livraison : quantité réellement livrée. */
+  quantityDelivered: z
+    .number({ error: "Quantité livrée invalide." })
+    .min(0, "La quantité livrée ne peut pas être négative.")
+    .max(1_000_000, "Quantité trop grande.")
+    .nullish()
+    .transform((v) => v ?? null),
+  observation: optText(200),
 });
 
 export const documentInputSchema = z.object({
-  type: z.enum(["FAC", "DEV", "BL"]),
+  type: z.enum(DOCUMENT_TYPES),
   /** Document d'origine (devis → facture, facture → BL, duplication). Vérifié côté serveur. */
   sourceDocumentId: z.uuid().nullish(),
   client: z.object({
@@ -58,6 +67,8 @@ export const documentInputSchema = z.object({
     .default({ count: 1, amounts: [], dueDates: [] }),
   deliveryAddress: optText(300),
   deliveredBy: optText(160),
+  subject: optText(200),
+  clientReference: optText(80),
 });
 
 export type DocumentInput = z.input<typeof documentInputSchema>;

@@ -107,6 +107,16 @@ export const companySchema = z.object({
   mtnMoney: optionalPhone,
   moovMoney: optionalPhone,
   defaultNote: optionalText(1000),
+  email: z
+    .string()
+    .trim()
+    .toLowerCase()
+    .optional()
+    .transform((v) => v || null)
+    .pipe(z.email("Adresse e-mail invalide.").nullable()),
+  website: optionalText(200),
+  tagline: optionalText(120),
+  bankDetails: optionalText(400),
 });
 
 export type FieldErrors = Record<string, string>;

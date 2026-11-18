@@ -1,14 +1,15 @@
 import Link from "next/link";
 import { DueList } from "@/components/due-list";
 import { MethodDonut, MonthlyBars } from "@/components/charts";
+import type { DocumentType } from "@/lib/db/schema";
 import { UpgradeNotice } from "@/components/upgrade-notice";
 import { StatusPill } from "@/components/status-pill";
-import { methodLabel, type DocumentStatus } from "@/lib/documents/calc";
+import { methodLabel, TYPE_TRAITS, type DocumentStatus } from "@/lib/documents/calc";
 import type { Dashboard } from "@/lib/stats/dashboard";
 import { monthLabel, PERIOD_KEYS, PERIOD_LABELS, type Period } from "@/lib/stats/period";
 import { formatDate, formatFCFA } from "@/lib/format";
 
-type Recent = { id: string; type: "FAC" | "DEV" | "BL"; number: string; status: DocumentStatus; clientName: string | null; total: number };
+type Recent = { id: string; type: DocumentType; number: string; status: DocumentStatus; clientName: string | null; total: number };
 
 function Kpi({ label, value, sub, tone }: { label: string; value: string; sub?: string; tone?: "bad" | "good" }) {
   return (
@@ -123,7 +124,7 @@ export function DashboardView({ d, period, recent, company, full, canCsv }: { d:
             {recent.map((r) => (
               <li key={r.id}>
                 <Link href={`/app/documents/${r.id}`} className="flex items-center justify-between gap-3 py-2.5 no-underline">
-                  <span className="min-w-0"><span className="block font-bold">{r.number}</span><span className="block truncate text-sm text-mut">{r.clientName ?? "Client"}{r.type !== "BL" ? ` · ${formatFCFA(r.total)}` : ""}</span></span>
+                  <span className="min-w-0"><span className="block font-bold">{r.number}</span><span className="block truncate text-sm text-mut">{r.clientName ?? "Client"}{TYPE_TRAITS[r.type].priced ? ` · ${formatFCFA(r.total)}` : ""}</span></span>
                   <StatusPill status={r.status} type={r.type} />
                 </Link>
               </li>

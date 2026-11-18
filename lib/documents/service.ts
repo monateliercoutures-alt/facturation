@@ -2,8 +2,8 @@ import "server-only";
 import { randomBytes } from "node:crypto";
 import { and, asc, count, desc, eq, gte, inArray, sql } from "drizzle-orm";
 import { getDb, type Db } from "@/lib/db";
-import { clients, companies, documentItems, documents, installments, users, type PaymentNumbers } from "@/lib/db/schema";
-import { computeTotals, installmentLabels, invoiceStatus, todayISO, type DocumentStatus } from "@/lib/documents/calc";
+import { clients, companies, documentItems, documents, installments, users, type DocumentType, type PaymentNumbers } from "@/lib/db/schema";
+import { computeTotals, installmentLabels, invoiceStatus, todayISO, TYPE_TRAITS, type DocumentStatus } from "@/lib/documents/calc";
 import { effectivePlan, PLAN_FEATURES, type PlanKey } from "@/lib/plans";
 import type { DocumentData } from "@/lib/documents/schema";
 import { nextDocumentNumber } from "@/lib/numbering";
@@ -95,7 +95,7 @@ export async function getDocumentByToken(token: string): Promise<DocumentView | 
 
 export type ListRow = {
   id: string;
-  type: "FAC" | "DEV" | "BL";
+  type: DocumentType;
   number: string;
   status: DocumentStatus;
   issueDate: string;
@@ -152,6 +152,7 @@ export async function listClientNames(userId: string) {
 export async function createDocument(userId: string, data: DocumentData, outer?: Db | Tx): Promise<string> {
   // `outer` : transaction appelante (point de sauvegarde imbriqué), pour tout valider ou tout annuler ensemble.
   const db = outer ?? getDb();
+  const traits = TYPE_TRAITS[data.type];
   const isBL = data.type === "BL";
 
   // Un document d'origine doit appartenir au même utilisateur.
@@ -160,12 +161,12 @@ export async function createDocument(userId: string, data: DocumentData, outer?:
     if (!src) throw new DocumentError("Le document d'origine est introuvable.");
   }
 
-  const items = data.items.map((i) => ({ ...i, unitPrice: isBL ? 0 : i.unitPrice }));
-  const totals = isBL ? { subtotal: 0, discountAmount: 0, vatAmount: 0, total: 0 } : computeTotals(items, data.discountPercent, data.vatPercent);
+  const items = data.items.map((i) => ({ ...i, unitPrice: traits.priced ? i.unitPrice : 0 }));
+  const totals = traits.priced ? computeTotals(items, data.discountPercent, data.vatPercent) : { subtotal: 0, discountAmount: 0, vatAmount: 0, total: 0 };
 
   // Tranches : le total est recalculé ici, jamais pris du navigateur.
   let plan: { label: string; amount: number; dueDate: string | null }[] = [];
-  if (!isBL) {
+  if (traits.payment) {
     const count = data.installments.count;
     const amounts = count === 1 ? [totals.total] : data.installments.amounts;
     if (amounts.length !== count) throw new DocumentError("Le nombre de tranches ne correspond pas aux montants.", "installments");
@@ -207,7 +208,7 @@ export async function createDocument(userId: string, data: DocumentData, outer?:
 
     // Numéros Mobile Money saisis : mémorisés dans le profil (s'il existe).
     const entered = Object.fromEntries(Object.entries(data.paymentNumbers).filter(([, v]) => v)) as PaymentNumbers;
-    if (!isBL && Object.keys(entered).length > 0) {
+    if (traits.payment && Object.keys(entered).length > 0) {
       const [co] = await tx.select().from(companies).where(eq(companies.userId, userId)).limit(1);
       if (co) await tx.update(companies).set({ paymentNumbers: { ...co.paymentNumbers, ...entered } }).where(and(eq(companies.id, co.id), eq(companies.userId, userId)));
     }
@@ -223,20 +224,22 @@ export async function createDocument(userId: string, data: DocumentData, outer?:
         number,
         status,
         issueDate: data.issueDate,
-        dueDate: isBL ? null : data.dueDate,
-        discountPercent: isBL ? 0 : data.discountPercent,
-        vatPercent: isBL ? 0 : data.vatPercent,
+        dueDate: data.dueDate,
+        discountPercent: traits.priced ? data.discountPercent : 0,
+        vatPercent: traits.priced ? data.vatPercent : 0,
         ...totals,
         note: data.note,
-        paymentMethods: isBL ? [] : data.paymentMethods,
-        deliveryAddress: isBL ? (data.deliveryAddress ?? data.client.address) : null,
+        paymentMethods: traits.payment ? data.paymentMethods : [],
+        deliveryAddress: isBL ? (data.deliveryAddress ?? data.client.address) : data.deliveryAddress,
         deliveredBy: isBL ? data.deliveredBy : null,
+        subject: data.subject,
+        clientReference: data.clientReference,
         sourceDocumentId: data.sourceDocumentId ?? null,
         shareToken: newShareToken(),
       })
       .returning({ id: documents.id });
 
-    await tx.insert(documentItems).values(items.map((i, position) => ({ documentId: doc.id, position, description: i.description, quantity: i.quantity, unitPrice: i.unitPrice })));
+    await tx.insert(documentItems).values(items.map((i, position) => ({ documentId: doc.id, position, description: i.description, quantity: i.quantity, unitPrice: i.unitPrice, unit: i.unit, quantityDelivered: isBL ? (i.quantityDelivered ?? i.quantity) : null, observation: i.observation })));
     if (plan.length) await tx.insert(installments).values(plan.map((p, position) => ({ documentId: doc.id, position, ...p })));
     return doc.id;
   });

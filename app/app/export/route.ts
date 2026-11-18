@@ -1,7 +1,7 @@
 import { eq, inArray } from "drizzle-orm";
 import { getDb } from "@/lib/db";
 import { clients, documents, installments } from "@/lib/db/schema";
-import { DOCUMENT_LABELS, invoiceStatus, methodLabel, statusLabel, todayISO, type DocumentStatus } from "@/lib/documents/calc";
+import { DOCUMENT_LABELS, TYPE_TRAITS, invoiceStatus, methodLabel, statusLabel, todayISO, type DocumentStatus } from "@/lib/documents/calc";
 import { toCsv } from "@/lib/stats/csv";
 import { dateOf, resolvePeriod } from "@/lib/stats/period";
 import { formatDate } from "@/lib/format";
@@ -43,7 +43,7 @@ export async function GET(request: Request) {
         const mine = inst.filter((i) => i.documentId === doc.id);
         const status: DocumentStatus = doc.type === "FAC" ? invoiceStatus(doc.status, mine, today) : doc.status;
         const paid = mine.filter((i) => i.paidAt).reduce((s, i) => s + i.amount, 0);
-        const priced = doc.type !== "BL";
+        const priced = TYPE_TRAITS[doc.type].priced;
         return [
           doc.number,
           DOCUMENT_LABELS[doc.type].singular,

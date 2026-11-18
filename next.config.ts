@@ -34,6 +34,8 @@ const securityHeaders = [
 
 const nextConfig: NextConfig = {
   poweredByHeader: false,
+  // Chargé tel quel depuis node_modules : le bundler cassait les numéros de page des PDF.
+  serverExternalPackages: ["@react-pdf/renderer"],
   async headers() {
     return [
       { source: "/:path*", headers: securityHeaders },

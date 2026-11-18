@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { StatusPill } from "@/components/status-pill";
-import { DOCUMENT_LABELS, STATUS_LABELS, type DocumentStatus } from "@/lib/documents/calc";
+import { DOCUMENT_LABELS, DOCUMENT_TYPES, STATUS_LABELS, type DocumentStatus } from "@/lib/documents/calc";
 import { listDocuments } from "@/lib/documents/service";
 import { formatDate, formatFCFA } from "@/lib/format";
 import { requireUser } from "@/lib/session";
@@ -13,7 +13,7 @@ type Search = { q?: string; type?: string; status?: string };
 export default async function DocumentsPage({ searchParams }: { searchParams: Promise<Search> }) {
   const user = await requireUser();
   const sp = await searchParams;
-  const type = ["FAC", "DEV", "BL"].includes(sp.type ?? "") ? sp.type : undefined;
+  const type = (DOCUMENT_TYPES as readonly string[]).includes(sp.type ?? "") ? sp.type : undefined;
   const status = Object.keys(STATUS_LABELS).includes(sp.status ?? "") ? sp.status : undefined;
   const rows = await listDocuments(user.id, { q: sp.q, type, status });
   const filtered = Boolean(sp.q || type || status);
@@ -34,7 +34,7 @@ export default async function DocumentsPage({ searchParams }: { searchParams: Pr
           <label htmlFor="type" className="field-label">Type</label>
           <select id="type" name="type" defaultValue={type ?? ""} className="input">
             <option value="">Tous</option>
-            {(["FAC", "DEV", "BL"] as const).map((t) => <option key={t} value={t}>{DOCUMENT_LABELS[t].plural}</option>)}
+            {DOCUMENT_TYPES.map((t) => <option key={t} value={t}>{DOCUMENT_LABELS[t].plural}</option>)}
           </select>
         </div>
         <div>
@@ -69,7 +69,7 @@ export default async function DocumentsPage({ searchParams }: { searchParams: Pr
                   </div>
                   <StatusPill status={r.status} type={r.type} />
                 </div>
-                {r.type !== "BL" ? (
+                {DOCUMENT_LABELS[r.type].priced ? (
                   <p className="mt-2 font-bold">
                     {formatFCFA(r.total)}
                     {r.type === "FAC" && r.paid > 0 && r.paid < r.total ? <span className="ml-2 text-sm font-normal text-mut">dont {formatFCFA(r.paid)} payés</span> : null}

@@ -21,7 +21,8 @@ const createdAt = () => timestamp("created_at", { withTimezone: true }).notNull(
 
 export const userRole = pgEnum("user_role", ["user", "admin"]);
 export const plan = pgEnum("plan", ["free", "pro", "business"]);
-export const documentType = pgEnum("document_type", ["FAC", "DEV", "BL"]);
+/** FAC facture, PRO facture pro forma, DEV devis, BL bon de livraison, BC bon de commande. */
+export const documentType = pgEnum("document_type", ["FAC", "DEV", "BL", "PRO", "BC"]);
 export const documentStatus = pgEnum("document_status", [
   "draft",
   "sent",
@@ -72,6 +73,12 @@ export const companies = pgTable(
     phone: text("phone"),
     paymentNumbers: jsonb("payment_numbers").$type<PaymentNumbers>().notNull().default({}),
     defaultNote: text("default_note"),
+    email: text("email"),
+    website: text("website"),
+    /** Slogan affiché sous le nom de l'entreprise. */
+    tagline: text("tagline"),
+    /** RIB / IBAN affiché sur les documents quand « Virement » est accepté. */
+    bankDetails: text("bank_details"),
     createdAt: createdAt(),
   },
   (t) => [uniqueIndex("companies_user_id_key").on(t.userId)],
@@ -116,6 +123,10 @@ export const documents = pgTable(
     paymentMethods: text("payment_methods").array().notNull().default(sql`'{}'::text[]`),
     deliveryAddress: text("delivery_address"),
     deliveredBy: text("delivered_by"),
+    /** Objet du document (« Rénovation cuisine pour un appartement F2 »). */
+    subject: text("subject"),
+    /** Référence du client : son numéro de commande, son code client. */
+    clientReference: text("client_reference"),
     sourceDocumentId: uuid("source_document_id"),
     shareToken: text("share_token").notNull().unique(),
     createdAt: createdAt(),
@@ -138,6 +149,11 @@ export const documentItems = pgTable(
     description: text("description").notNull(),
     quantity: numeric("quantity", { precision: 12, scale: 2, mode: "number" }).notNull().default(1),
     unitPrice: money("unit_price").notNull().default(0),
+    /** Unité : u, h, m², kg, forfait… */
+    unit: text("unit"),
+    /** Bon de livraison : quantité réellement livrée (par défaut, la quantité commandée). */
+    quantityDelivered: numeric("quantity_delivered", { precision: 12, scale: 2, mode: "number" }),
+    observation: text("observation"),
   },
   (t) => [index("document_items_document_id_idx").on(t.documentId)],
 );

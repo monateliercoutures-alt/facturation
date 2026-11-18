@@ -64,6 +64,7 @@ export function CompanyForm({ company, welcome, canLogo }: { company: Company | 
       <section className="card">
         <h2 className="mb-3 text-lg font-extrabold">Entreprise</h2>
         <Field name="name" label="Nom de l’entreprise" required defaultValue={v("name", company?.name)} key={k("name")} error={e.name} autoComplete="organization" />
+        <Field name="tagline" label="Slogan (facultatif)" defaultValue={v("tagline", company?.tagline)} key={k("tagline")} error={e.tagline} placeholder="Ex. Menuiserie et agencement sur mesure" maxLength={120} />
 
         <div className="mb-4">
           <span className="field-label">Logo</span>
@@ -97,12 +98,15 @@ export function CompanyForm({ company, welcome, canLogo }: { company: Company | 
         <Field name="rccm" label="RCCM" defaultValue={v("rccm", company?.rccm)} key={k("rccm")} error={e.rccm} placeholder="CI-ABJ-2024-B-00000" />
         <Field name="taxNumber" label="Compte contribuable" defaultValue={v("taxNumber", company?.taxNumber)} key={k("taxNumber")} error={e.taxNumber} />
         <TextArea name="address" label="Adresse" rows={2} defaultValue={v("address", company?.address)} key={k("address")} error={e.address} />
+        <Field name="email" label="E-mail de l’entreprise" type="email" inputMode="email" defaultValue={v("email", company?.email)} key={k("email")} error={e.email} placeholder="contact@monentreprise.ci" />
+        <Field name="website" label="Site web (facultatif)" defaultValue={v("website", company?.website)} key={k("website")} error={e.website} placeholder="www.monentreprise.ci" />
         <Field name="phone" label="Téléphone de l’entreprise" type="tel" inputMode="tel" defaultValue={v("phone", company?.phone ? formatPhone(company?.phone) : "")} key={k("phone")} error={e.phone} placeholder="07 00 00 00 00" />
       </section>
 
       <section className="card">
-        <h2 className="mb-1 text-lg font-extrabold">Numéros Mobile Money</h2>
+        <h2 className="mb-1 text-lg font-extrabold">Paiements</h2>
         <p className="mb-3 text-mut">Affichés sur vos documents pour que vos clients sachent où payer.</p>
+        <TextArea name="bankDetails" label="RIB ou IBAN (virement)" rows={2} defaultValue={v("bankDetails", company?.bankDetails)} key={k("bankDetails")} error={e.bankDetails} hint="Affiché sur les documents quand « Virement » est accepté. Ex. : BICICI CI000 01234 012345678901 23" />
         <Field name="wave" label="Wave" type="tel" inputMode="tel" defaultValue={v("wave", pn.wave ? formatPhone(pn.wave) : "")} key={k("wave")} error={e.wave} />
         <Field name="orangeMoney" label="Orange Money" type="tel" inputMode="tel" defaultValue={v("orangeMoney", pn.orangeMoney ? formatPhone(pn.orangeMoney) : "")} key={k("orangeMoney")} error={e.orangeMoney} />
         <Field name="mtnMoney" label="MTN Money" type="tel" inputMode="tel" defaultValue={v("mtnMoney", pn.mtnMoney ? formatPhone(pn.mtnMoney) : "")} key={k("mtnMoney")} error={e.mtnMoney} />

@@ -47,7 +47,7 @@ export async function validatePaymentAction(requestId: string) {
         type: "FAC",
         sourceDocumentId: null,
         client: { id: null, name: `${user.name} (${user.phone})`, phone: user.phone, email: user.email, address: null },
-        items: [{ description: `Abonnement FactureCI ${PLAN_LABELS[req.plan]} - 30 jours`, quantity: 1, unitPrice: req.amount }],
+        items: [{ description: `Abonnement FactureCI ${PLAN_LABELS[req.plan]} - 30 jours`, quantity: 1, unitPrice: req.amount, unit: null, quantityDelivered: null, observation: null }],
         discountPercent: 0,
         vatPercent: 0,
         issueDate: today,
@@ -58,6 +58,8 @@ export async function validatePaymentAction(requestId: string) {
         installments: { count: 1, amounts: [req.amount], dueDates: [today] },
         deliveryAddress: null,
         deliveredBy: null,
+        subject: `Abonnement FactureCI ${PLAN_LABELS[req.plan]}`,
+        clientReference: null,
       },
       tx,
     );

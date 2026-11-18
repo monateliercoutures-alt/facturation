@@ -53,6 +53,15 @@ Un utilisateur dont le téléphone figure dans `ADMIN_PHONES` reçoit le rôle a
 - Envoi : liens `wa.me`, `sms:` et `mailto:` (`lib/documents/share.ts`). Couche e-mail séparée dans `lib/documents/email.ts` : pour brancher Resend, écrire un `EmailSender` de type `api` et remplacer `emailSender`.
 - Dupliquer, devis → facture, facture → bon de livraison : même formulaire, prérempli depuis le document d'origine (vérifié par `user_id`).
 
+## Documents professionnels
+
+- **Cinq types** (`lib/documents/calc.ts`, `TYPE_TRAITS`) : facture (FAC), facture pro forma (PRO), devis (DEV), bon de livraison (BL), bon de commande (BC). Les règles de chaque type (prix, tranches, libellés, signatures) sont dans un seul tableau.
+- **En-tête complet** : logo, slogan, adresse, téléphone, e-mail, site web, RCCM, compte contribuable. **Pied de page** : coordonnées, remerciement, numéro de page.
+- **Document** : objet, référence ou n° de commande du client, validité (devis, pro forma), adresse de livraison distincte, unité par ligne, Total HT / TVA / Total TTC / Net à payer, « déjà réglé » et « reste à payer » sur les factures partiellement payées, coordonnées bancaires quand le virement est accepté, « Bon pour accord » sur les devis.
+- **Bon de livraison** : quantité commandée, quantité livrée et observation par ligne, sans aucun prix.
+- Aperçu écran et PDF partagent `deriveSheet` (`lib/documents/sheet.ts`) : un libellé modifié l'est aux deux endroits.
+- Migration `drizzle/0003_documents_pro.sql` : nouveaux types, colonnes de profil et de document.
+
 ## Tableaux de bord (Prompt 3)
 
 - **Utilisateur (`/app`)** : période (aujourd'hui, 7 jours, ce mois, mois dernier, cette année, personnalisée), 6 indicateurs, barres sur 12 mois, anneau par moyen de paiement, 5 meilleurs clients, relances WhatsApp, export CSV (`/app/export`).

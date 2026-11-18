@@ -59,7 +59,7 @@ export function invoiceStatus(current: DocumentStatus, installments: Installment
 }
 
 export function hasPrices(type: DocumentType): boolean {
-  return type !== "BL";
+  return TYPE_TRAITS[type].priced;
 }
 
 export const PAYMENT_METHODS = [
@@ -79,11 +79,40 @@ export function methodLabel(key: string): string {
   return PAYMENT_METHODS.find((m) => m.key === key)?.label ?? key;
 }
 
-export const DOCUMENT_LABELS: Record<DocumentType, { singular: string; plural: string; upper: string }> = {
-  FAC: { singular: "Facture", plural: "Factures", upper: "FACTURE" },
-  DEV: { singular: "Devis", plural: "Devis", upper: "DEVIS" },
-  BL: { singular: "Bon de livraison", plural: "Bons de livraison", upper: "BON DE LIVRAISON" },
+export const DOCUMENT_TYPES = ["FAC", "PRO", "DEV", "BL", "BC"] as const;
+
+/**
+ * Ce que chaque type de document comporte. Un seul endroit : formulaire, calculs, aperçu et PDF s'y réfèrent.
+ * - priced : prix, remise et TVA. payment : tranches et moyens de paiement.
+ */
+export type TypeTraits = {
+  singular: string;
+  plural: string;
+  upper: string;
+  priced: boolean;
+  payment: boolean;
+  feminine: boolean;
+  /** Intitulé du bloc « client ». */
+  party: string;
+  /** Intitulé de la date limite du document. */
+  dueLabel: string;
+  signLeft: string;
+  signRight: string;
+  /** Demande la mention « Bon pour accord » (devis, pro forma). */
+  agreement: boolean;
 };
+
+export const TYPE_TRAITS: Record<DocumentType, TypeTraits> = {
+  FAC: { singular: "Facture", plural: "Factures", upper: "FACTURE", priced: true, payment: true, feminine: true, party: "Facturé à", dueLabel: "Date d'échéance", signLeft: "Le prestataire", signRight: "Cachet et signature du client", agreement: false },
+  PRO: { singular: "Facture pro forma", plural: "Factures pro forma", upper: "FACTURE PRO FORMA", priced: true, payment: true, feminine: true, party: "Client", dueLabel: "Valable jusqu'au", signLeft: "Le prestataire", signRight: "Bon pour accord, cachet et signature du client", agreement: true },
+  DEV: { singular: "Devis", plural: "Devis", upper: "DEVIS", priced: true, payment: true, feminine: false, party: "Client", dueLabel: "Valable jusqu'au", signLeft: "Le prestataire", signRight: "Signature du client précédée de la mention « Bon pour accord »", agreement: true },
+  BL: { singular: "Bon de livraison", plural: "Bons de livraison", upper: "BON DE LIVRAISON", priced: false, payment: false, feminine: false, party: "Livré à", dueLabel: "Date de livraison", signLeft: "Le livreur", signRight: "Reçu par (nom, date, signature)", agreement: false },
+  BC: { singular: "Bon de commande", plural: "Bons de commande", upper: "BON DE COMMANDE", priced: true, payment: false, feminine: false, party: "Fournisseur", dueLabel: "Livraison souhaitée avant le", signLeft: "Autorisé par (nom et titre)", signRight: "Signature et date", agreement: false },
+};
+
+export const DOCUMENT_LABELS = TYPE_TRAITS;
+
+export const UNIT_SUGGESTIONS = ["u", "h", "jour", "m²", "m", "kg", "L", "forfait", "carton", "sac"] as const;
 
 export const STATUS_LABELS: Record<DocumentStatus, string> = {
   draft: "Brouillon",
@@ -99,5 +128,5 @@ export const ITEM_TEMPLATES = ["Création de site web", "Prestation de service",
 
 /** « Envoyée » est féminin pour une facture ; un devis ou un bon de livraison prend le masculin. */
 export function statusLabel(status: DocumentStatus, type?: DocumentType): string {
-  return status === "sent" && type && type !== "FAC" ? "Envoyé" : STATUS_LABELS[status];
+  return status === "sent" && type && !TYPE_TRAITS[type].feminine ? "Envoyé" : STATUS_LABELS[status];
 }

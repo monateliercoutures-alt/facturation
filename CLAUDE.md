@@ -17,7 +17,7 @@ Next.js (App Router) + TypeScript + Tailwind, Neon (PostgreSQL) avec Drizzle, Au
 - Français partout. Montants : `60 000 FCFA`, sans décimales. Dates : jj/mm/aaaa. Fuseau : Africa/Abidjan.
 - Toute requête filtre par `user_id`. Aucun accès aux données d'un autre utilisateur.
 - Calculs : sous-total, remise %, TVA (0 ou 18 %), total. Tranches de 1 à 6 : acompte saisi, reste réparti à parts égales arrondies à 100 FCFA vers le bas, la dernière tranche absorbe la différence. Exemple : 60 000 avec acompte 20 000 en 4 tranches donne 20 000 / 13 300 / 13 300 / 13 400.
-- Trois types de documents : Facture (FAC), Devis (DEV), Bon de livraison (BL, sans prix). Numérotation FAC-2026-001, par utilisateur, type et année, dans une transaction.
+- Cinq types de documents : Facture (FAC), Facture pro forma (PRO), Devis (DEV), Bon de livraison (BL, sans prix), Bon de commande (BC, avec prix mais sans tranches ni moyens de paiement). Seules les factures (FAC) comptent dans le chiffre d'affaires. Numérotation FAC-2026-001, par utilisateur, type et année, dans une transaction.
 - Pas d'API WhatsApp ni SMS payante : liens `wa.me` (préfixe 225 si le numéro compte 10 chiffres), `sms:` et `mailto:`.
 - Paiement de l'abonnement sans API : lien Wave, puis validation manuelle par l'admin.
 - Design : fond #F5F8F4, vert #0E6B43, orange #F77F00, police Bricolage Grotesque, boutons d'au moins 48 px, mode sombre automatique.
@@ -28,7 +28,7 @@ Next.js (App Router) + TypeScript + Tailwind, Neon (PostgreSQL) avec Drizzle, Au
 - Encaissé : somme des tranches dont `paid_at` tombe dans la période.
 - À encaisser : total des factures non annulées moins les tranches payées.
 - En retard : tranches non payées dont l'échéance est dépassée.
-- Les devis et les bons de livraison ne comptent jamais dans le chiffre d'affaires.
+- Les devis, factures pro forma, bons de livraison et bons de commande ne comptent jamais dans le chiffre d'affaires.
 
 ## Avant de dire qu'une étape est finie
 
