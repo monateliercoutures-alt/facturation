@@ -1,4 +1,4 @@
-import { STATUS_LABELS, type DocumentStatus } from "@/lib/documents/calc";
+import { statusLabel, type DocumentStatus } from "@/lib/documents/calc";
 
 const STYLES: Record<DocumentStatus, string> = {
   draft: "bg-line text-mut",
@@ -11,7 +11,6 @@ const STYLES: Record<DocumentStatus, string> = {
 };
 
 export function StatusPill({ status, type }: { status: DocumentStatus; type?: "FAC" | "DEV" | "BL" }) {
-  // « Envoyée » est féminin pour une facture ; un devis ou un BL prend le masculin.
-  const label = status === "sent" && type && type !== "FAC" ? "Envoyé" : STATUS_LABELS[status];
+  const label = statusLabel(status, type);
   return <span className={`inline-block rounded-full px-2.5 py-0.5 text-xs font-bold ${STYLES[status]}`}>{label}</span>;
 }

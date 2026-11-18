@@ -24,6 +24,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
           { href: "/app/documents", label: "Documents" },
           { href: "/app/entreprise", label: "Entreprise" },
           { href: "/app/compte", label: "Compte" },
+          ...(user.role === "admin" ? [{ href: "/admin", label: "Admin" }] : []),
         ]}
       />
       <main className="mt-5">{children}</main>

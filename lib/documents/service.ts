@@ -119,8 +119,9 @@ export async function listClientNames(userId: string) {
 }
 
 /** Crée un document complet (client, numéro, lignes, tranches) dans une seule transaction. */
-export async function createDocument(userId: string, data: DocumentData): Promise<string> {
-  const db = getDb();
+export async function createDocument(userId: string, data: DocumentData, outer?: Db | Tx): Promise<string> {
+  // `outer` : transaction appelante (point de sauvegarde imbriqué), pour tout valider ou tout annuler ensemble.
+  const db = outer ?? getDb();
   const isBL = data.type === "BL";
 
   // Un document d'origine doit appartenir au même utilisateur.

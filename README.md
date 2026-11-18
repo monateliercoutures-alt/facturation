@@ -2,7 +2,7 @@
 
 SaaS de facturation pour PME, artisans et freelances de Côte d'Ivoire. Mobile-first, en français, en FCFA. Porté par Krea Ecom.
 
-**État : Prompts 1 et 2 terminés.** Comptes, profil de l'entreprise, base de données, compte admin, puis factures, devis et bons de livraison (3 écrans, tranches, PDF, WhatsApp, lien public). Tableaux de bord et abonnements arrivent aux prompts 3 et 4 (voir `docs/PROMPTS.md`).
+**État : Prompts 1 à 3 terminés.** Comptes, documents (factures, devis, bons de livraison), puis tableaux de bord utilisateur et admin. L'abonnement, la PWA et le déploiement arrivent au prompt 4 (voir `docs/PROMPTS.md`).
 
 Stack : Next.js 16 (App Router), TypeScript, Tailwind 4, Neon (PostgreSQL) + Drizzle, Auth.js, zod.
 
@@ -53,6 +53,15 @@ Un utilisateur dont le téléphone figure dans `ADMIN_PHONES` reçoit le rôle a
 - Envoi : liens `wa.me`, `sms:` et `mailto:` (`lib/documents/share.ts`). Couche e-mail séparée dans `lib/documents/email.ts` : pour brancher Resend, écrire un `EmailSender` de type `api` et remplacer `emailSender`.
 - Dupliquer, devis → facture, facture → bon de livraison : même formulaire, prérempli depuis le document d'origine (vérifié par `user_id`).
 
+## Tableaux de bord (Prompt 3)
+
+- **Utilisateur (`/app`)** : période (aujourd'hui, 7 jours, ce mois, mois dernier, cette année, personnalisée), 6 indicateurs, barres sur 12 mois, anneau par moyen de paiement, 5 meilleurs clients, relances WhatsApp, export CSV (`/app/export`).
+- **Définitions** dans `lib/stats/dashboard.ts` (fonctions pures, testées). Les factures annulées, les devis et les bons de livraison ne comptent jamais dans le chiffre d'affaires.
+- **Admin (`/admin`, rôle admin)** : indicateurs, validation ou rejet des demandes de paiement, liste des utilisateurs (changer de plan, suspendre, réinitialiser le mot de passe), journal des actions. Les comptes admin sont exclus du revenu et des abonnés.
+- **Valider un paiement** active le plan pour 30 jours (prolonge de 30 jours si le même plan est encore actif) et crée une facture d'abonnement, déjà payée, dans le compte de l'admin qui valide. Renseignez le profil entreprise de ce compte pour qu'elle porte votre en-tête.
+- **Suspendre** coupe l'accès immédiatement (même avec une session ouverte) sans supprimer de données.
+- Migration `drizzle/0001_admin.sql` : colonne `users.suspended_at` et table `admin_actions`.
+
 ## À faire aux prompts suivants
 
-Limitation des tentatives de connexion et d'inscription, page de réinitialisation côté admin (Prompt 3), PWA et déploiement (Prompt 4).
+Limitation des tentatives de connexion et d'inscription, plans et limites, demande de paiement côté utilisateur, PWA, déploiement (Prompt 4).

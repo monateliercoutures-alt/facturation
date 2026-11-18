@@ -43,6 +43,8 @@ export const users = pgTable("users", {
   role: userRole("role").notNull().default("user"),
   plan: plan("plan").notNull().default("free"),
   planExpiresAt: timestamp("plan_expires_at", { withTimezone: true }),
+  /** Compte suspendu par un admin : connexion refusée, données conservées. */
+  suspendedAt: timestamp("suspended_at", { withTimezone: true }),
   createdAt: createdAt(),
 });
 
@@ -186,6 +188,22 @@ export const counters = pgTable(
     lastNumber: integer("last_number").notNull().default(0),
   },
   (t) => [primaryKey({ columns: [t.userId, t.type, t.year] })],
+);
+
+/** Journal des actions d'administration (qui a fait quoi, quand). Jamais de mot de passe dedans. */
+export const adminActions = pgTable(
+  "admin_actions",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    adminId: uuid("admin_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    action: text("action").notNull(),
+    targetUserId: uuid("target_user_id").references(() => users.id, { onDelete: "set null" }),
+    details: jsonb("details").$type<Record<string, string | number | null>>().notNull().default({}),
+    createdAt: createdAt(),
+  },
+  (t) => [index("admin_actions_created_at_idx").on(t.createdAt)],
 );
 
 export type User = typeof users.$inferSelect;

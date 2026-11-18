@@ -96,3 +96,8 @@ export const STATUS_LABELS: Record<DocumentStatus, string> = {
 };
 
 export const ITEM_TEMPLATES = ["Création de site web", "Prestation de service", "Vente de marchandises"] as const;
+
+/** « Envoyée » est féminin pour une facture ; un devis ou un bon de livraison prend le masculin. */
+export function statusLabel(status: DocumentStatus, type?: DocumentType): string {
+  return status === "sent" && type && type !== "FAC" ? "Envoyé" : STATUS_LABELS[status];
+}

@@ -29,6 +29,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           throw new InvalidCredentials();
         }
         if (!(await verifyPassword(password, user.passwordHash))) throw new InvalidCredentials();
+        // Compte suspendu : même message qu'un mauvais mot de passe, pour ne rien révéler.
+        if (user.suspendedAt) throw new InvalidCredentials();
         // ADMIN_PHONES fait foi : un numéro ajouté ou retiré prend effet à la connexion suivante.
         const role = isAdminPhone(user.phone) ? "admin" : "user";
         if (role !== user.role) await db.update(users).set({ role }).where(eq(users.id, user.id));
