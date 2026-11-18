@@ -1,0 +1,109 @@
+import { z } from "zod";
+import { normalizePhone } from "@/lib/phone";
+import { PASSWORD_MAX_LENGTH, PASSWORD_MIN_LENGTH } from "@/lib/password";
+
+const trimmed = (max: number) => z.string().trim().max(max, `${max} caractères maximum.`);
+const optionalText = (max: number) =>
+  trimmed(max)
+    .optional()
+    .transform((v) => (v ? v : null));
+
+export const phoneSchema = z
+  .string({ error: "Indiquez votre numéro de téléphone." })
+  .trim()
+  .min(1, "Indiquez votre numéro de téléphone.")
+  .transform((value, ctx) => {
+    const phone = normalizePhone(value);
+    if (!phone) {
+      ctx.addIssue({ code: "custom", message: "Numéro invalide. Exemple : 07 00 00 00 00." });
+      return z.NEVER;
+    }
+    return phone;
+  });
+
+const optionalPhone = z
+  .string()
+  .trim()
+  .optional()
+  .transform((value, ctx) => {
+    if (!value) return null;
+    const phone = normalizePhone(value);
+    if (!phone) {
+      ctx.addIssue({ code: "custom", message: "Numéro invalide. Exemple : 07 00 00 00 00." });
+      return z.NEVER;
+    }
+    return phone;
+  });
+
+const passwordSchema = z
+  .string()
+  .min(PASSWORD_MIN_LENGTH, `Le mot de passe doit faire au moins ${PASSWORD_MIN_LENGTH} caractères.`)
+  .max(PASSWORD_MAX_LENGTH, `Le mot de passe doit faire au plus ${PASSWORD_MAX_LENGTH} caractères.`);
+
+const optionalEmail = z
+  .string()
+  .trim()
+  .toLowerCase()
+  .optional()
+  .transform((v) => v || null)
+  .pipe(z.email("Adresse e-mail invalide.").nullable());
+
+export const signUpSchema = z
+  .object({
+    name: trimmed(120).min(2, "Indiquez votre nom (2 caractères minimum)."),
+    phone: phoneSchema,
+    email: optionalEmail,
+    password: passwordSchema,
+    confirm: z.string(),
+  })
+  .refine((d) => d.password === d.confirm, { path: ["confirm"], message: "Les deux mots de passe ne sont pas identiques." });
+
+export const signInSchema = z.object({
+  phone: phoneSchema,
+  password: z.string().min(1, "Indiquez votre mot de passe.").max(PASSWORD_MAX_LENGTH),
+});
+
+/** Logo : data URL d'une image déjà redimensionnée dans le navigateur (240 px max). */
+export const LOGO_MAX_BYTES = 200 * 1024;
+const logoSchema = z
+  .string()
+  .optional()
+  .transform((value, ctx) => {
+    if (!value) return null;
+    const m = /^data:image\/(png|jpeg|webp);base64,([A-Za-z0-9+/=]+)$/.exec(value);
+    if (!m) {
+      ctx.addIssue({ code: "custom", message: "Le logo doit être une image PNG, JPEG ou WebP." });
+      return z.NEVER;
+    }
+    if (Math.floor((m[2].length * 3) / 4) > LOGO_MAX_BYTES) {
+      ctx.addIssue({ code: "custom", message: "Logo trop lourd après redimensionnement. Choisissez une image plus simple." });
+      return z.NEVER;
+    }
+    return value;
+  });
+
+export const companySchema = z.object({
+  name: trimmed(160).min(2, "Indiquez le nom de l'entreprise."),
+  logo: logoSchema,
+  removeLogo: z.literal("1").optional(),
+  rccm: optionalText(80),
+  taxNumber: optionalText(80),
+  address: optionalText(300),
+  phone: optionalPhone,
+  wave: optionalPhone,
+  orangeMoney: optionalPhone,
+  mtnMoney: optionalPhone,
+  moovMoney: optionalPhone,
+  defaultNote: optionalText(1000),
+});
+
+export type FieldErrors = Record<string, string>;
+
+export function fieldErrors(error: z.ZodError): FieldErrors {
+  const out: FieldErrors = {};
+  for (const issue of error.issues) {
+    const key = String(issue.path[0] ?? "form");
+    out[key] ??= issue.message;
+  }
+  return out;
+}

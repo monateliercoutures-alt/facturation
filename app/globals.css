@@ -1,0 +1,97 @@
+@import "tailwindcss";
+
+/* Couleurs du prototype validé (prototype/index.html). Mode sombre automatique. */
+:root {
+  --bg: #f5f8f4;
+  --card: #ffffff;
+  --ink: #12261c;
+  --mut: #5b6b62;
+  --line: #d9e2db;
+  --g: #0e6b43;
+  --on: #ffffff;
+  --o: #f77f00;
+  --gs: #e3f1e9;
+  --err: #b42318;
+  --errs: #fde8e6;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #0e1712;
+    --card: #16231b;
+    --ink: #e8f1ea;
+    --mut: #9fb3a6;
+    --line: #2a3a30;
+    --g: #3fbf85;
+    --on: #07120c;
+    --o: #ff9a2e;
+    --gs: #1c3327;
+    --err: #ff8a80;
+    --errs: #3a1d1b;
+    color-scheme: dark;
+  }
+}
+
+@theme inline {
+  --color-bg: var(--bg);
+  --color-card: var(--card);
+  --color-ink: var(--ink);
+  --color-mut: var(--mut);
+  --color-line: var(--line);
+  --color-g: var(--g);
+  --color-on: var(--on);
+  --color-o: var(--o);
+  --color-gs: var(--gs);
+  --color-err: var(--err);
+  --color-errs: var(--errs);
+  --font-sans: var(--font-bricolage), "Bricolage Grotesque", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --radius-xl: 12px;
+}
+
+html,
+body {
+  background: var(--bg);
+  color: var(--ink);
+}
+body {
+  font-family: var(--font-sans);
+  font-size: 16px;
+  line-height: 1.45;
+  padding-top: env(safe-area-inset-top, 0px);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+@layer components {
+  .card {
+    @apply rounded-2xl border border-line bg-card p-4;
+  }
+  .field-label {
+    @apply mb-1.5 block text-sm font-semibold;
+  }
+  .input {
+    @apply min-h-12 w-full rounded-xl border-[1.5px] border-line bg-bg px-3 py-2.5 text-ink placeholder:text-mut/70;
+  }
+  .input[aria-invalid="true"] {
+    @apply border-err;
+  }
+  .btn {
+    @apply flex min-h-12 w-full cursor-pointer items-center justify-center rounded-xl bg-g px-4 text-base font-extrabold text-on disabled:cursor-wait disabled:opacity-60;
+  }
+  .btn-orange {
+    @apply bg-o text-[#1b1000];
+  }
+  .btn-ghost {
+    @apply border-[1.5px] border-g bg-transparent text-g;
+  }
+  .field-error {
+    @apply mt-1 text-sm font-semibold text-err;
+  }
+  .hint {
+    @apply mt-1 text-sm text-mut;
+  }
+}
+
+:where(a, button, input, select, textarea, summary):focus-visible {
+  outline: 3px solid var(--o);
+  outline-offset: 1px;
+}
