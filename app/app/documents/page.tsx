@@ -28,7 +28,7 @@ export default async function DocumentsPage({ searchParams }: { searchParams: Pr
       <form method="get" role="search" className="card mb-4 grid gap-3 sm:grid-cols-[1fr_auto_auto_auto]">
         <div>
           <label htmlFor="q" className="field-label">Client ou numéro</label>
-          <input id="q" name="q" type="search" defaultValue={sp.q ?? ""} className="input" placeholder="Ex. Brou ou FAC-2026-001" />
+          <input id="q" name="q" type="search" defaultValue={sp.q ?? ""} className="input" placeholder="Ex. Dupont ou FAC-2026-001" />
         </div>
         <div>
           <label htmlFor="type" className="field-label">Type</label>

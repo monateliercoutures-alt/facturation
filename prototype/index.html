@@ -62,11 +62,11 @@ const $=s=>document.querySelector(s);
 const esc=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const fmt=n=>(Math.round(n)||0).toLocaleString('fr-FR').replace(/[\u202f\u00a0]/g,' ')+' FCFA';
 const LS={get(k,d){try{const v=localStorage.getItem(k);return v?JSON.parse(v):d}catch(e){return d}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
-let co=LS.get('co',{name:'Kouakou Brou Jean-Marc',rccm:'',pay:'Wave / Orange Money / MTN / Moov'});
+let co=LS.get('co',{name:'Mon entreprise',rccm:'',pay:'Wave / Orange Money / MTN / Moov'});
 let inv=LS.get('inv',[]);
 let view='new';
 let d=fresh();
-function fresh(){return{step:1,client:'Monsieur Brou',phone:'',lines:[{t:'Création de mini boutique e-commerce',q:1,p:60000}],split:true,n:4,dep:20000,saved:null,type:'FAC',disc:0,tva:0,due:'',note:co.note||'Merci pour votre confiance.',email:'',addr:'',pm:co.pm||['Wave','Espèces']}}
+function fresh(){return{step:1,client:'Monsieur Dupont',phone:'',lines:[{t:'Création de mini boutique e-commerce',q:1,p:60000}],split:true,n:4,dep:20000,saved:null,type:'FAC',disc:0,tva:0,due:'',note:co.note||'Merci pour votre confiance.',email:'',addr:'',pm:co.pm||['Wave','Espèces']}}
 const total=()=>d.lines.reduce((s,l)=>s+(+l.q||0)*(+l.p||0),0);
 const disc=()=>Math.round(total()*(+d.disc||0)/100),tvaA=()=>Math.round((total()-disc())*(+d.tva||0)/100),ttc=()=>total()-disc()+tvaA();
 function w(n){const u=['zéro','un','deux','trois','quatre','cinq','six','sept','huit','neuf','dix','onze','douze','treize','quatorze','quinze','seize','dix-sept','dix-huit','dix-neuf'],t=['','','vingt','trente','quarante','cinquante','soixante'];
@@ -93,7 +93,7 @@ function step(){
   const s=d.step,A=$('#app');
   const head=`<div class="bar"><i style="width:${s*33.4}%"></i></div><p class="stp">Étape ${s} sur 3</p>`;
   if(s===1){A.innerHTML=head+`<h2>Pour qui est ce document ?</h2><div class="chips"><button class="chip ${d.type==='FAC'?'on':''}" onclick="d.type='FAC';render()">Facture</button><button class="chip ${d.type==='DEV'?'on':''}" onclick="d.type='DEV';render()">Devis</button><button class="chip ${d.type==='BL'?'on':''}" onclick="d.type='BL';render()">Bon de livraison</button></div>
-  <div class="card"><label>Nom du client</label><input value="${esc(d.client)}" oninput="d.client=this.value" placeholder="Ex. Monsieur Brou">
+  <div class="card"><label>Nom du client</label><input value="${esc(d.client)}" oninput="d.client=this.value" placeholder="Ex. Monsieur Dupont">
   <label>WhatsApp du client</label><input type="tel" inputmode="tel" value="${esc(d.phone)}" oninput="d.phone=this.value" placeholder="07 00 00 00 00"><label>E-mail du client (facultatif)</label><input type="email" inputmode="email" value="${esc(d.email)}" oninput="d.email=this.value" placeholder="client@exemple.com">${d.type==='BL'?`<label>Adresse de livraison</label><input value="${esc(d.addr)}" oninput="d.addr=this.value" placeholder="Quartier, commune, repère">`:''}</div>
   <div class="card"><label>Votre nom ou entreprise</label><input value="${esc(co.name)}" oninput="co.name=this.value;LS.set('co',co)">
   

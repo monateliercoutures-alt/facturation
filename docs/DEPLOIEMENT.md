@@ -42,8 +42,8 @@ Puis cliquez sur **Deploy**. Le premier déploiement réussit mais l'application
 Sur votre ordinateur, dans le dossier du projet :
 
 ```bash
-git clone https://github.com/monateliercoutures-alt/facturation.git
-cd facturation
+git clone <adresse-de-votre-dépôt>
+cd <dossier-du-projet>
 npm install
 ```
 

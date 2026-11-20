@@ -1,6 +1,6 @@
 # FactureCI – Prompts complets
 
-Krea Ecom · Novembre 2026
+Novembre 2026
 
 ## Comment l'utiliser
 

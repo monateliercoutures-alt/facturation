@@ -221,7 +221,7 @@ export function DocumentForm({ initial, company, clients, today, mention, userId
           </div>
           <div className="card">
             <label className="field-label" htmlFor="c-name">{type === "BC" ? "Nom du fournisseur" : "Nom du client"}</label>
-            <input id="c-name" className="input mb-4" list="clients" value={client.name} onChange={(e) => pickClientName(e.target.value)} placeholder="Ex. Monsieur Brou" autoComplete="off" />
+            <input id="c-name" className="input mb-4" list="clients" value={client.name} onChange={(e) => pickClientName(e.target.value)} placeholder="Ex. Monsieur Dupont" autoComplete="off" />
             <datalist id="clients">{clients.map((c) => <option key={c.id} value={c.name} />)}</datalist>
             <label className="field-label" htmlFor="c-phone">WhatsApp</label>
             <input id="c-phone" className="input mb-4" type="tel" inputMode="tel" value={client.phone} onChange={(e) => setClient({ ...client, phone: e.target.value })} placeholder="07 00 00 00 00" />

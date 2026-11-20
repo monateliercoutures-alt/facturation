@@ -1,6 +1,6 @@
 # FactureCI
 
-SaaS de facturation pour PME, artisans et freelances de Côte d'Ivoire (puis Afrique de l'Ouest). Mobile-first, PWA, en français, en FCFA. Porté par Krea Ecom.
+SaaS de facturation pour PME, artisans et freelances de Côte d'Ivoire (puis Afrique de l'Ouest). Mobile-first, PWA, en français, en FCFA.
 
 ## Comment travailler sur ce projet
 
