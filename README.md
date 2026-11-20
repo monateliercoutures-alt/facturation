@@ -18,6 +18,10 @@ npm run dev                  # http://localhost:3000
 
 Générer `AUTH_SECRET` : `openssl rand -base64 33`.
 
+## Base de données
+
+Tables et types dans le schéma PostgreSQL `factureci` (jamais `public`) : la base peut être partagée avec une autre application. Voir `docs/DEPLOIEMENT.md`.
+
 ## Commandes
 
 | Commande | Rôle |

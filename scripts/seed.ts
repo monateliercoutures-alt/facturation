@@ -15,15 +15,17 @@ async function main() {
   if (!SEED_ADMIN_PASSWORD || SEED_ADMIN_PASSWORD.length < PASSWORD_MIN_LENGTH) {
     throw new Error(`SEED_ADMIN_PASSWORD manquant (${PASSWORD_MIN_LENGTH} caractères minimum).`);
   }
-  const client = postgres(DATABASE_URL, { max: 1, prepare: false });
+  const client = postgres(process.env.DATABASE_URL_UNPOOLED || DATABASE_URL, { max: 1, prepare: false });
   const db = drizzle(client);
   const passwordHash = await hashPassword(SEED_ADMIN_PASSWORD);
+  // Ne réécrit jamais le mot de passe d'un compte existant (le seed tourne à chaque déploiement de production) :
+  // pour le changer, utilisez « npm run admin:reset-password » ou la page /admin.
   await db
     .insert(users)
     .values({ phone, name: SEED_ADMIN_NAME || "Administrateur", passwordHash, role: "admin", plan: "business" })
-    .onConflictDoUpdate({ target: users.phone, set: { role: "admin", passwordHash } });
+    .onConflictDoUpdate({ target: users.phone, set: { role: "admin" } });
   await client.end();
-  console.log(`Compte admin prêt : ${phone}`);
+  console.log(`Compte admin prêt : ${phone} (mot de passe inchangé s'il existait déjà)`);
 }
 
 main().catch((e) => {

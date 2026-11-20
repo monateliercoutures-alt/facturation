@@ -5,29 +5,8 @@
     {
       "idx": 0,
       "version": "7",
-      "when": 1795011326951,
-      "tag": "0000_fondations",
-      "breakpoints": true
-    },
-    {
-      "idx": 1,
-      "version": "7",
-      "when": 1795013896759,
-      "tag": "0001_admin",
-      "breakpoints": true
-    },
-    {
-      "idx": 2,
-      "version": "7",
-      "when": 1795014903023,
-      "tag": "0002_rate_limits",
-      "breakpoints": true
-    },
-    {
-      "idx": 3,
-      "version": "7",
-      "when": 1795015942852,
-      "tag": "0003_documents_pro",
+      "when": 1795213195921,
+      "tag": "0000_initial",
       "breakpoints": true
     }
   ]

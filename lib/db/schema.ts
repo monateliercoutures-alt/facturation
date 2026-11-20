@@ -6,8 +6,7 @@ import {
   integer,
   jsonb,
   numeric,
-  pgEnum,
-  pgTable,
+  pgSchema,
   primaryKey,
   text,
   timestamp,
@@ -15,15 +14,22 @@ import {
   uuid,
 } from "drizzle-orm/pg-core";
 
+/**
+ * Toutes les tables et tous les types vivent dans le schéma « factureci » : l'application peut ainsi
+ * partager une base PostgreSQL avec une autre sans jamais lire ni écrire dans ses tables.
+ */
+export const DB_SCHEMA = "factureci";
+export const app = pgSchema(DB_SCHEMA);
+
 /** Montants en FCFA : entiers, sans décimales. bigint en mode number (sûr jusqu'à 9 × 10^15). */
 const money = (name: string) => bigint(name, { mode: "number" });
 const createdAt = () => timestamp("created_at", { withTimezone: true }).notNull().defaultNow();
 
-export const userRole = pgEnum("user_role", ["user", "admin"]);
-export const plan = pgEnum("plan", ["free", "pro", "business"]);
+export const userRole = app.enum("user_role", ["user", "admin"]);
+export const plan = app.enum("plan", ["free", "pro", "business"]);
 /** FAC facture, PRO facture pro forma, DEV devis, BL bon de livraison, BC bon de commande. */
-export const documentType = pgEnum("document_type", ["FAC", "DEV", "BL", "PRO", "BC"]);
-export const documentStatus = pgEnum("document_status", [
+export const documentType = app.enum("document_type", ["FAC", "DEV", "BL", "PRO", "BC"]);
+export const documentStatus = app.enum("document_status", [
   "draft",
   "sent",
   "partial",
@@ -32,9 +38,9 @@ export const documentStatus = pgEnum("document_status", [
   "cancelled",
   "delivered",
 ]);
-export const paymentRequestStatus = pgEnum("payment_request_status", ["pending", "validated", "rejected"]);
+export const paymentRequestStatus = app.enum("payment_request_status", ["pending", "validated", "rejected"]);
 
-export const users = pgTable("users", {
+export const users = app.table("users", {
   id: uuid("id").primaryKey().defaultRandom(),
   /** Numéro normalisé au format international : +2250700000000. */
   phone: text("phone").notNull().unique(),
@@ -57,7 +63,7 @@ export type PaymentNumbers = {
   moovMoney?: string;
 };
 
-export const companies = pgTable(
+export const companies = app.table(
   "companies",
   {
     id: uuid("id").primaryKey().defaultRandom(),
@@ -84,7 +90,7 @@ export const companies = pgTable(
   (t) => [uniqueIndex("companies_user_id_key").on(t.userId)],
 );
 
-export const clients = pgTable(
+export const clients = app.table(
   "clients",
   {
     id: uuid("id").primaryKey().defaultRandom(),
@@ -100,7 +106,7 @@ export const clients = pgTable(
   (t) => [index("clients_user_id_idx").on(t.userId)],
 );
 
-export const documents = pgTable(
+export const documents = app.table(
   "documents",
   {
     id: uuid("id").primaryKey().defaultRandom(),
@@ -138,7 +144,7 @@ export const documents = pgTable(
   ],
 );
 
-export const documentItems = pgTable(
+export const documentItems = app.table(
   "document_items",
   {
     id: uuid("id").primaryKey().defaultRandom(),
@@ -158,7 +164,7 @@ export const documentItems = pgTable(
   (t) => [index("document_items_document_id_idx").on(t.documentId)],
 );
 
-export const installments = pgTable(
+export const installments = app.table(
   "installments",
   {
     id: uuid("id").primaryKey().defaultRandom(),
@@ -176,7 +182,7 @@ export const installments = pgTable(
   (t) => [index("installments_document_id_idx").on(t.documentId)],
 );
 
-export const paymentRequests = pgTable(
+export const paymentRequests = app.table(
   "payment_requests",
   {
     id: uuid("id").primaryKey().defaultRandom(),
@@ -193,7 +199,7 @@ export const paymentRequests = pgTable(
   (t) => [index("payment_requests_user_id_idx").on(t.userId)],
 );
 
-export const counters = pgTable(
+export const counters = app.table(
   "counters",
   {
     userId: uuid("user_id")
@@ -207,7 +213,7 @@ export const counters = pgTable(
 );
 
 /** Journal des actions d'administration (qui a fait quoi, quand). Jamais de mot de passe dedans. */
-export const adminActions = pgTable(
+export const adminActions = app.table(
   "admin_actions",
   {
     id: uuid("id").primaryKey().defaultRandom(),
@@ -223,7 +229,7 @@ export const adminActions = pgTable(
 );
 
 /** Compteurs de limitation de débit (connexion, inscription), partagés entre toutes les instances. */
-export const rateLimits = pgTable("rate_limits", {
+export const rateLimits = app.table("rate_limits", {
   key: text("key").primaryKey(),
   count: integer("count").notNull().default(0),
   resetAt: timestamp("reset_at", { withTimezone: true }).notNull(),

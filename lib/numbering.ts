@@ -17,10 +17,10 @@ type Tx = Parameters<Parameters<Db["transaction"]>[0]>[0];
  */
 export async function nextDocumentNumber(tx: Tx | Db, userId: string, type: DocumentType, year: number): Promise<string> {
   const rows = await tx.execute<{ last_number: number }>(sql`
-    insert into counters (user_id, type, year, last_number)
+    insert into factureci.counters (user_id, type, year, last_number)
     values (${userId}, ${type}, ${year}, 1)
     on conflict (user_id, type, year)
-    do update set last_number = counters.last_number + 1
+    do update set last_number = factureci.counters.last_number + 1
     returning last_number
   `);
   const last = Number(rows[0]?.last_number);

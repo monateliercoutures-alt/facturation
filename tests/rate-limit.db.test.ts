@@ -9,7 +9,7 @@ run("limitation de débit (base réelle)", () => {
   const key = `test:${Date.now()}`;
   afterAll(async () => {
     const { getDb } = await import("@/lib/db");
-    await getDb().execute(sql`delete from rate_limits where key like 'test:%'`);
+    await getDb().execute(sql`delete from factureci.rate_limits where key like 'test:%'`);
   });
 
   it("autorise jusqu'à la limite puis bloque, même sous requêtes simultanées", async () => {
@@ -31,7 +31,7 @@ run("limitation de débit (base réelle)", () => {
     const k = `${key}:expire`;
     await hit(db, k, { limit: 1, windowSeconds: 60 });
     expect((await hit(db, k, { limit: 1, windowSeconds: 60 })).allowed).toBe(false);
-    await db.execute(sql`update rate_limits set reset_at = now() - interval '1 second' where key = ${k}`);
+    await db.execute(sql`update factureci.rate_limits set reset_at = now() - interval '1 second' where key = ${k}`);
     expect((await hit(db, k, { limit: 1, windowSeconds: 60 })).allowed).toBe(true);
   });
 });

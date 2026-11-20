@@ -90,3 +90,9 @@ Passez la checklist de `docs/PROMPTS.md` sur l'adresse Vercel, depuis un vrai t�
 - **Impossible de se connecter juste après le seed** : le numéro admin doit être identique (format libre) dans `ADMIN_PHONES` et `SEED_ADMIN_PHONE`.
 - **« Le lien de paiement n'est pas encore configuré »** : renseignez `WAVE_LINK_PRO` et `WAVE_LINK_BUSINESS`, puis redéployez.
 - **Réinitialiser un mot de passe** : depuis `/admin`, ou `npm run admin:reset-password -- 0700000000 NouveauMotDePasse`.
+
+## Partager une base avec une autre application
+
+FactureCI range **toutes** ses tables et ses types dans le schéma PostgreSQL `factureci` (et son journal de migrations aussi) : il peut donc partager une base Neon avec une autre application sans jamais lire ni écrire dans ses tables. Au déploiement de production, l'étape `vercel-build` (`scripts/predeploy.ts`) crée ou met à jour ce schéma, puis crée le compte admin si `SEED_ADMIN_PHONE` et `SEED_ADMIN_PASSWORD` sont définies (le mot de passe d'un compte existant n'est jamais réécrit). Les déploiements de prévisualisation ne touchent pas à la base.
+
+Pour passer plus tard sur une base dédiée : `pg_dump --schema=factureci` de l'ancienne base, restauration dans la nouvelle, puis changement de `DATABASE_URL`.
