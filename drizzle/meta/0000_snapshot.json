@@ -1,5 +1,5 @@
 {
-  "id": "a943703a-0bd0-4205-9603-e3ebffd35b97",
+  "id": "94fddfaf-a503-47eb-8d3b-31c244a191f5",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -841,103 +841,6 @@
       "checkConstraints": {},
       "isRLSEnabled": false
     },
-    "factureci.payment_requests": {
-      "name": "payment_requests",
-      "schema": "factureci",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "uuid",
-          "primaryKey": true,
-          "notNull": true,
-          "default": "gen_random_uuid()"
-        },
-        "user_id": {
-          "name": "user_id",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "plan": {
-          "name": "plan",
-          "type": "plan",
-          "typeSchema": "factureci",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "amount": {
-          "name": "amount",
-          "type": "bigint",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "reference": {
-          "name": "reference",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "status": {
-          "name": "status",
-          "type": "payment_request_status",
-          "typeSchema": "factureci",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "'pending'"
-        },
-        "created_at": {
-          "name": "created_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
-        },
-        "validated_at": {
-          "name": "validated_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": false
-        }
-      },
-      "indexes": {
-        "payment_requests_user_id_idx": {
-          "name": "payment_requests_user_id_idx",
-          "columns": [
-            {
-              "expression": "user_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        }
-      },
-      "foreignKeys": {
-        "payment_requests_user_id_users_id_fk": {
-          "name": "payment_requests_user_id_users_id_fk",
-          "tableFrom": "payment_requests",
-          "tableTo": "users",
-          "schemaTo": "factureci",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        }
-      },
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
-      "policies": {},
-      "checkConstraints": {},
-      "isRLSEnabled": false
-    },
     "factureci.rate_limits": {
       "name": "rate_limits",
       "schema": "factureci",
@@ -1013,20 +916,6 @@
           "notNull": true,
           "default": "'user'"
         },
-        "plan": {
-          "name": "plan",
-          "type": "plan",
-          "typeSchema": "factureci",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "'free'"
-        },
-        "plan_expires_at": {
-          "name": "plan_expires_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": false
-        },
         "suspended_at": {
           "name": "suspended_at",
           "type": "timestamp with time zone",
@@ -1081,24 +970,6 @@
         "BL",
         "PRO",
         "BC"
-      ]
-    },
-    "factureci.payment_request_status": {
-      "name": "payment_request_status",
-      "schema": "factureci",
-      "values": [
-        "pending",
-        "validated",
-        "rejected"
-      ]
-    },
-    "factureci.plan": {
-      "name": "plan",
-      "schema": "factureci",
-      "values": [
-        "free",
-        "pro",
-        "business"
       ]
     },
     "factureci.user_role": {

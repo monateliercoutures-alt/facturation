@@ -22,7 +22,7 @@ async function resizeLogo(file: File): Promise<string> {
   return canvas.toDataURL("image/png");
 }
 
-export function CompanyForm({ company, welcome, canLogo }: { company: Company | null; welcome: boolean; canLogo: boolean }) {
+export function CompanyForm({ company, welcome }: { company: Company | null; welcome: boolean }) {
   const [state, action] = useActionState<FormState, FormData>(saveCompanyAction, {});
   const e = state.errors ?? {};
   const pn = company?.paymentNumbers ?? {};
@@ -72,12 +72,7 @@ export function CompanyForm({ company, welcome, canLogo }: { company: Company | 
             // eslint-disable-next-line @next/next/no-img-element -- aperçu local
             <img src={logo} alt="Aperçu du logo" className="mb-2 max-h-16 max-w-[180px] object-contain" />
           ) : null}
-          {!canLogo ? (
-            <p className="rounded-xl bg-o/10 px-3 py-2.5 text-sm">
-              Le logo est réservé au plan Pro. <a href="/app/abonnement" className="font-bold text-g underline">Passez au plan Pro</a>
-            </p>
-          ) : null}
-          <input ref={fileRef} type="file" accept="image/png,image/jpeg,image/webp" onChange={onFile} aria-label="Choisir un logo" disabled={!canLogo} className="input py-2.5 disabled:opacity-50" />
+          <input ref={fileRef} type="file" accept="image/png,image/jpeg,image/webp" onChange={onFile} aria-label="Choisir un logo" className="input py-2.5" />
           <input type="hidden" name="logo" value={logo && !removed && logo !== company?.logo ? logo : ""} />
           {removed ? <input type="hidden" name="removeLogo" value="1" /> : null}
           {logo && !removed ? (

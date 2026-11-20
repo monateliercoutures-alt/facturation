@@ -2,8 +2,6 @@ CREATE SCHEMA IF NOT EXISTS "factureci";
 --> statement-breakpoint
 CREATE TYPE "factureci"."document_status" AS ENUM('draft', 'sent', 'partial', 'paid', 'overdue', 'cancelled', 'delivered');--> statement-breakpoint
 CREATE TYPE "factureci"."document_type" AS ENUM('FAC', 'DEV', 'BL', 'PRO', 'BC');--> statement-breakpoint
-CREATE TYPE "factureci"."payment_request_status" AS ENUM('pending', 'validated', 'rejected');--> statement-breakpoint
-CREATE TYPE "factureci"."plan" AS ENUM('free', 'pro', 'business');--> statement-breakpoint
 CREATE TYPE "factureci"."user_role" AS ENUM('user', 'admin');--> statement-breakpoint
 CREATE TABLE "factureci"."admin_actions" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
@@ -100,17 +98,6 @@ CREATE TABLE "factureci"."installments" (
 	"method" text
 );
 --> statement-breakpoint
-CREATE TABLE "factureci"."payment_requests" (
-	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
-	"user_id" uuid NOT NULL,
-	"plan" "factureci"."plan" NOT NULL,
-	"amount" bigint NOT NULL,
-	"reference" text NOT NULL,
-	"status" "factureci"."payment_request_status" DEFAULT 'pending' NOT NULL,
-	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
-	"validated_at" timestamp with time zone
-);
---> statement-breakpoint
 CREATE TABLE "factureci"."rate_limits" (
 	"key" text PRIMARY KEY NOT NULL,
 	"count" integer DEFAULT 0 NOT NULL,
@@ -124,8 +111,6 @@ CREATE TABLE "factureci"."users" (
 	"password_hash" text NOT NULL,
 	"name" text NOT NULL,
 	"role" "factureci"."user_role" DEFAULT 'user' NOT NULL,
-	"plan" "factureci"."plan" DEFAULT 'free' NOT NULL,
-	"plan_expires_at" timestamp with time zone,
 	"suspended_at" timestamp with time zone,
 	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
 	CONSTRAINT "users_phone_unique" UNIQUE("phone")
@@ -140,7 +125,6 @@ ALTER TABLE "factureci"."document_items" ADD CONSTRAINT "document_items_document
 ALTER TABLE "factureci"."documents" ADD CONSTRAINT "documents_user_id_users_id_fk" FOREIGN KEY ("user_id") REFERENCES "factureci"."users"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "factureci"."documents" ADD CONSTRAINT "documents_client_id_clients_id_fk" FOREIGN KEY ("client_id") REFERENCES "factureci"."clients"("id") ON DELETE set null ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "factureci"."installments" ADD CONSTRAINT "installments_document_id_documents_id_fk" FOREIGN KEY ("document_id") REFERENCES "factureci"."documents"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "factureci"."payment_requests" ADD CONSTRAINT "payment_requests_user_id_users_id_fk" FOREIGN KEY ("user_id") REFERENCES "factureci"."users"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 CREATE INDEX "admin_actions_created_at_idx" ON "factureci"."admin_actions" USING btree ("created_at");--> statement-breakpoint
 CREATE INDEX "clients_user_id_idx" ON "factureci"."clients" USING btree ("user_id");--> statement-breakpoint
 CREATE UNIQUE INDEX "companies_user_id_key" ON "factureci"."companies" USING btree ("user_id");--> statement-breakpoint
@@ -148,5 +132,4 @@ CREATE INDEX "document_items_document_id_idx" ON "factureci"."document_items" US
 CREATE UNIQUE INDEX "documents_user_type_number_key" ON "factureci"."documents" USING btree ("user_id","type","number");--> statement-breakpoint
 CREATE INDEX "documents_user_id_idx" ON "factureci"."documents" USING btree ("user_id");--> statement-breakpoint
 CREATE INDEX "documents_client_id_idx" ON "factureci"."documents" USING btree ("client_id");--> statement-breakpoint
-CREATE INDEX "installments_document_id_idx" ON "factureci"."installments" USING btree ("document_id");--> statement-breakpoint
-CREATE INDEX "payment_requests_user_id_idx" ON "factureci"."payment_requests" USING btree ("user_id");
+CREATE INDEX "installments_document_id_idx" ON "factureci"."installments" USING btree ("document_id");

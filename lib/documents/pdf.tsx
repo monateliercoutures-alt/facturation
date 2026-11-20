@@ -3,7 +3,6 @@ import { deriveSheet, type SheetData } from "@/lib/documents/sheet";
 import { amountSentence } from "@/lib/documents/words";
 import { formatAmount, formatDate, formatFCFA } from "@/lib/format";
 import { formatPhone } from "@/lib/phone";
-import { MENTION_TEXT } from "@/lib/plans";
 
 const GREEN = "#0E6B43";
 const MUTED = "#5B6B62";
@@ -209,7 +208,6 @@ export function DocumentPdf({ data }: { data: SheetData }) {
         <View style={s.footer} fixed>
           {traits.priced ? <Text style={[s.bold, { color: "#12261C", marginBottom: 2 }]}>Merci de votre confiance.{d.contact.length ? ` Une question sur ce document ? ${d.contact.slice(0, 2).join("  ·  ")}` : ""}</Text> : null}
           <Text>{[data.company.name, ...d.identity].join("  ·  ")}</Text>
-          {data.mention ? <Text>{MENTION_TEXT}</Text> : null}
         </View>
         <Text fixed style={{ position: "absolute", bottom: 8, left: 36, right: 36, textAlign: "center", fontSize: 7.5, color: MUTED }} render={({ pageNumber, totalPages }) => `Page ${pageNumber} / ${totalPages}`} />
       </Page>

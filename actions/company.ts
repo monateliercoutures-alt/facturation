@@ -3,7 +3,6 @@
 import { revalidatePath } from "next/cache";
 import { getDb } from "@/lib/db";
 import { companies, type PaymentNumbers } from "@/lib/db/schema";
-import { PLAN_FEATURES, effectivePlan } from "@/lib/plans";
 import { requireUser } from "@/lib/session";
 import { companySchema, fieldErrors } from "@/lib/validation";
 import type { FormState } from "./auth";
@@ -18,11 +17,6 @@ export async function saveCompanyAction(_prev: FormState, formData: FormData): P
   }
 
   const d = parsed.data;
-  // Le logo est une fonction des plans Pro et Business, contrôlée ici côté serveur.
-  const canLogo = PLAN_FEATURES[effectivePlan(user)].logo;
-  if (d.logo && !canLogo) {
-    return { errors: { logo: "Le logo est réservé au plan Pro." }, message: "Le logo est réservé au plan Pro. Retirez-le ou passez au plan Pro." };
-  }
   const paymentNumbers: PaymentNumbers = {};
   if (d.wave) paymentNumbers.wave = d.wave;
   if (d.orangeMoney) paymentNumbers.orangeMoney = d.orangeMoney;

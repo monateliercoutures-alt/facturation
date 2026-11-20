@@ -29,8 +29,8 @@ Dans l'écran d'import (ou plus tard : **Settings → Environment Variables**), 
 | `AUTH_SECRET` | une longue valeur aléatoire : `openssl rand -base64 33` (ou `npx auth secret`) |
 | `AUTH_TRUST_HOST` | `true` |
 | `ADMIN_PHONES` | vos numéros admin séparés par des virgules, ex. `0700000000,0500000000` |
-| `WAVE_LINK_PRO` | votre lien de paiement Wave pour 4 900 FCFA |
-| `WAVE_LINK_BUSINESS` | votre lien de paiement Wave pour 9 900 FCFA |
+| `ALLOW_SIGNUP` | facultatif : `yes` ouvre l'inscription à tous (sinon seuls les numéros de `ADMIN_PHONES` peuvent s'inscrire) |
+| `SEED_COMPANY` | facultatif : profil société préremplie (JSON, voir `.env.example`) |
 | `APP_URL` | l'adresse du site, ex. `https://factureci.vercel.app` (sans `/` final) |
 
 Puis cliquez sur **Deploy**. Le premier déploiement réussit mais l'application ne fonctionnera qu'après l'étape 5 (les tables n'existent pas encore).
@@ -80,15 +80,12 @@ Passez la checklist de `docs/PROMPTS.md` sur l'adresse Vercel, depuis un vrai t�
 - Créer un compte, renseigner l'entreprise.
 - Créer une facture de 60 000 FCFA, acompte 20 000, 4 tranches : 20 000 / 13 300 / 13 300 / 13 400.
 - Ouvrir le lien public `/d/…` dans une fenêtre privée.
-- Créer 6 documents en plan Gratuit : le 6e affiche « Passez au plan Pro ».
-- « Mon abonnement » → Payer avec Wave → envoyer la référence → valider dans `/admin`.
 - Installer l'application (Chrome : menu → Installer l'application) et tester le mode avion.
 
 ## Dépannage
 
 - **Page blanche ou erreur 500** : vérifiez `DATABASE_URL` et que `npm run db:migrate` a bien été lancé sur *cette* base.
 - **Impossible de se connecter juste après le seed** : le numéro admin doit être identique (format libre) dans `ADMIN_PHONES` et `SEED_ADMIN_PHONE`.
-- **« Le lien de paiement n'est pas encore configuré »** : renseignez `WAVE_LINK_PRO` et `WAVE_LINK_BUSINESS`, puis redéployez.
 - **Réinitialiser un mot de passe** : depuis `/admin`, ou `npm run admin:reset-password -- 0700000000 NouveauMotDePasse`.
 
 ## Partager une base avec une autre application

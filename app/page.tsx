@@ -22,7 +22,7 @@ export default async function HomePage() {
           Factures, devis et bons de livraison en FCFA. Paiement en tranches, Wave, Orange Money, MTN, Moov. Envoi direct sur WhatsApp.
         </p>
         <Link href="/inscription" className="btn mb-3">
-          Créer mon compte gratuit
+          Créer mon compte
         </Link>
         <Link href="/connexion" className="btn btn-ghost">
           J’ai déjà un compte

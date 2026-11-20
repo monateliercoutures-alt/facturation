@@ -120,72 +120,21 @@ describe("export CSV", () => {
   });
 });
 
-import { isPaidActive, nextExpiry } from "@/lib/plans";
-
-describe("plans", () => {
-  const now = new Date("2026-11-18T12:00:00Z");
-  it("expiration : +30 jours ou prolongation du même plan encore actif", () => {
-    expect(nextExpiry({ plan: "free", planExpiresAt: null }, "pro", now).toISOString()).toBe("2026-12-18T12:00:00.000Z");
-    expect(nextExpiry({ plan: "pro", planExpiresAt: new Date("2026-11-25T12:00:00Z") }, "pro", now).toISOString()).toBe("2026-12-25T12:00:00.000Z");
-    // plan expiré ou changement de plan : on repart d'aujourd'hui
-    expect(nextExpiry({ plan: "pro", planExpiresAt: new Date("2026-11-01T00:00:00Z") }, "pro", now).toISOString()).toBe("2026-12-18T12:00:00.000Z");
-    expect(nextExpiry({ plan: "pro", planExpiresAt: new Date("2026-11-25T12:00:00Z") }, "business", now).toISOString()).toBe("2026-12-18T12:00:00.000Z");
-  });
-  it("plan payant actif seulement avant expiration", () => {
-    expect(isPaidActive({ plan: "pro", planExpiresAt: new Date("2026-12-01T00:00:00Z") }, now)).toBe(true);
-    expect(isPaidActive({ plan: "pro", planExpiresAt: new Date("2026-11-01T00:00:00Z") }, now)).toBe(false);
-    expect(isPaidActive({ plan: "free", planExpiresAt: null }, now)).toBe(false);
-  });
-});
 
 import { computeAdminStats } from "@/lib/admin/stats";
 
 describe("indicateurs admin", () => {
   const now = new Date("2026-11-18T12:00:00Z");
-  const users = [
-    { plan: "free" as const, planExpiresAt: null, createdAt: new Date("2026-11-17T00:00:00Z") },
-    { plan: "pro" as const, planExpiresAt: new Date("2026-12-10T00:00:00Z"), createdAt: new Date("2026-08-01T00:00:00Z") },
-    { plan: "business" as const, planExpiresAt: new Date("2026-12-10T00:00:00Z"), createdAt: new Date("2026-08-01T00:00:00Z") },
-    { plan: "pro" as const, planExpiresAt: new Date("2026-10-01T00:00:00Z"), createdAt: new Date("2026-05-01T00:00:00Z") }, // expiré
-    { plan: "business" as const, planExpiresAt: null, createdAt: new Date("2026-01-01T00:00:00Z"), role: "admin" as const },
-  ];
-  it("abonnés par plan, MRR et conversion (admin et plans expirés exclus)", () => {
-    const s = computeAdminStats(users, 3, now);
-    expect(s.total).toBe(5);
-    expect(s.newThisWeek).toBe(1);
-    expect(s.active30).toBe(3);
-    expect(s.byPlan).toEqual({ free: 2, pro: 1, business: 1 });
-    expect(s.mrr).toBe(4900 + 9900);
-    expect(s.conversionRate).toBe(50); // 2 payants sur 4 clients (hors admin)
+  it("inscrits, nouveaux de la semaine et actifs", () => {
+    const users = [
+      { createdAt: new Date("2026-11-17T00:00:00Z") },
+      { createdAt: new Date("2026-08-01T00:00:00Z") },
+      { createdAt: new Date("2026-01-01T00:00:00Z"), role: "admin" as const },
+    ];
+    expect(computeAdminStats(users, 2, now)).toEqual({ total: 3, newThisWeek: 1, active30: 2 });
   });
-  it("aucun utilisateur : pas de division par zéro", () => {
-    expect(computeAdminStats([], 0, now).conversionRate).toBeNull();
+  it("aucun utilisateur", () => {
+    expect(computeAdminStats([], 0, now)).toEqual({ total: 0, newThisWeek: 0, active30: 0 });
   });
 });
 
-import { daysUntilExpiry, effectivePlan, PLAN_FEATURES } from "@/lib/plans";
-
-describe("plan effectif", () => {
-  const now = new Date("2026-11-18T12:00:00Z");
-  it("retombe sur Gratuit à l'expiration, sans toucher aux données", () => {
-    expect(effectivePlan({ plan: "pro", planExpiresAt: new Date("2026-11-01T00:00:00Z") }, now)).toBe("free");
-    expect(effectivePlan({ plan: "pro", planExpiresAt: new Date("2026-12-01T00:00:00Z") }, now)).toBe("pro");
-    expect(effectivePlan({ plan: "business", planExpiresAt: new Date("2026-12-01T00:00:00Z") }, now)).toBe("business");
-  });
-  it("un administrateur n'est jamais limité", () => {
-    expect(effectivePlan({ plan: "free", planExpiresAt: null, role: "admin" }, now)).toBe("business");
-  });
-  it("droits par plan", () => {
-    expect(PLAN_FEATURES.free.documentsPerMonth).toBe(5);
-    expect(PLAN_FEATURES.free.pdfMention).toBe(true);
-    expect(PLAN_FEATURES.pro.pdfMention).toBe(false);
-    expect(PLAN_FEATURES.pro.csvExport).toBe(false);
-    expect(PLAN_FEATURES.business.csvExport).toBe(true);
-    expect(PLAN_FEATURES.business.users).toBe(3);
-  });
-  it("rappel : jours restants avant la fin", () => {
-    expect(daysUntilExpiry({ plan: "pro", planExpiresAt: new Date("2026-11-22T11:00:00Z") }, now)).toBe(4);
-    expect(daysUntilExpiry({ plan: "pro", planExpiresAt: new Date("2026-11-01T00:00:00Z") }, now)).toBeNull();
-    expect(daysUntilExpiry({ plan: "free", planExpiresAt: null }, now)).toBeNull();
-  });
-});

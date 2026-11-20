@@ -26,7 +26,6 @@ const money = (name: string) => bigint(name, { mode: "number" });
 const createdAt = () => timestamp("created_at", { withTimezone: true }).notNull().defaultNow();
 
 export const userRole = app.enum("user_role", ["user", "admin"]);
-export const plan = app.enum("plan", ["free", "pro", "business"]);
 /** FAC facture, PRO facture pro forma, DEV devis, BL bon de livraison, BC bon de commande. */
 export const documentType = app.enum("document_type", ["FAC", "DEV", "BL", "PRO", "BC"]);
 export const documentStatus = app.enum("document_status", [
@@ -38,7 +37,6 @@ export const documentStatus = app.enum("document_status", [
   "cancelled",
   "delivered",
 ]);
-export const paymentRequestStatus = app.enum("payment_request_status", ["pending", "validated", "rejected"]);
 
 export const users = app.table("users", {
   id: uuid("id").primaryKey().defaultRandom(),
@@ -48,8 +46,6 @@ export const users = app.table("users", {
   passwordHash: text("password_hash").notNull(),
   name: text("name").notNull(),
   role: userRole("role").notNull().default("user"),
-  plan: plan("plan").notNull().default("free"),
-  planExpiresAt: timestamp("plan_expires_at", { withTimezone: true }),
   /** Compte suspendu par un admin : connexion refusée, données conservées. */
   suspendedAt: timestamp("suspended_at", { withTimezone: true }),
   createdAt: createdAt(),
@@ -180,23 +176,6 @@ export const installments = app.table(
     method: text("method"),
   },
   (t) => [index("installments_document_id_idx").on(t.documentId)],
-);
-
-export const paymentRequests = app.table(
-  "payment_requests",
-  {
-    id: uuid("id").primaryKey().defaultRandom(),
-    userId: uuid("user_id")
-      .notNull()
-      .references(() => users.id, { onDelete: "cascade" }),
-    plan: plan("plan").notNull(),
-    amount: money("amount").notNull(),
-    reference: text("reference").notNull(),
-    status: paymentRequestStatus("status").notNull().default("pending"),
-    createdAt: createdAt(),
-    validatedAt: timestamp("validated_at", { withTimezone: true }),
-  },
-  (t) => [index("payment_requests_user_id_idx").on(t.userId)],
 );
 
 export const counters = app.table(

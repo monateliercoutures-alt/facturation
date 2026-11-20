@@ -49,7 +49,7 @@ export type FormInitial = {
 const MOBILE_FIELDS = PAYMENT_METHODS.filter((m) => m.mobile);
 const num = (s: string) => Number(s.replace(",", "."));
 
-export function DocumentForm({ initial, company, clients, today, mention, userId }: { initial: FormInitial; company: CompanyInfo; clients: ClientOption[]; today: string; mention: boolean; userId: string }) {
+export function DocumentForm({ initial, company, clients, today, userId }: { initial: FormInitial; company: CompanyInfo; clients: ClientOption[]; today: string; userId: string }) {
   const [step, setStep] = useState(1);
   const [type, setType] = useState<DocumentType>(initial.type);
   const [client, setClient] = useState(initial.client);
@@ -113,7 +113,6 @@ export function DocumentForm({ initial, company, clients, today, mention, userId
       deliveredBy: deliveredBy || null,
       subject: subject || null,
       clientReference: clientReference || null,
-      mention,
     }),
     // eslint-disable-next-line react-hooks/exhaustive-deps -- recalcul à chaque saisie
     [type, today, dueDate, company, client, deliveryAddress, subject, clientReference, items, discount, vat, count, deposit, overrides, instDates, methods, numbers, note, deliveredBy],

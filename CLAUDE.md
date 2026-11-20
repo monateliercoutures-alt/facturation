@@ -19,7 +19,7 @@ Next.js (App Router) + TypeScript + Tailwind, Neon (PostgreSQL) avec Drizzle, Au
 - Calculs : sous-total, remise %, TVA (0 ou 18 %), total. Tranches de 1 à 6 : acompte saisi, reste réparti à parts égales arrondies à 100 FCFA vers le bas, la dernière tranche absorbe la différence. Exemple : 60 000 avec acompte 20 000 en 4 tranches donne 20 000 / 13 300 / 13 300 / 13 400.
 - Cinq types de documents : Facture (FAC), Facture pro forma (PRO), Devis (DEV), Bon de livraison (BL, sans prix), Bon de commande (BC, avec prix mais sans tranches ni moyens de paiement). Seules les factures (FAC) comptent dans le chiffre d'affaires. Numérotation FAC-2026-001, par utilisateur, type et année, dans une transaction.
 - Pas d'API WhatsApp ni SMS payante : liens `wa.me` (préfixe 225 si le numéro compte 10 chiffres), `sms:` et `mailto:`.
-- Paiement de l'abonnement sans API : lien Wave, puis validation manuelle par l'admin.
+- Outil privé, sans forfait ni abonnement : toutes les fonctions sont ouvertes au propriétaire.
 - Design : fond #F5F8F4, vert #0E6B43, orange #F77F00, police Bricolage Grotesque, boutons d'au moins 48 px, mode sombre automatique.
 
 ## Définitions du tableau de bord

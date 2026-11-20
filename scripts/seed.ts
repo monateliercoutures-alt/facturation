@@ -1,7 +1,9 @@
 import { loadEnvConfig } from "@next/env";
 import { drizzle } from "drizzle-orm/postgres-js";
+import { eq } from "drizzle-orm";
 import postgres from "postgres";
-import { users } from "../lib/db/schema";
+import { companies, users, type PaymentNumbers } from "../lib/db/schema";
+import { companySchema } from "../lib/validation";
 import { hashPassword, PASSWORD_MIN_LENGTH } from "../lib/password";
 import { normalizePhone } from "../lib/phone";
 
@@ -22,8 +24,25 @@ async function main() {
   // pour le changer, utilisez « npm run admin:reset-password » ou la page /admin.
   await db
     .insert(users)
-    .values({ phone, name: SEED_ADMIN_NAME || "Administrateur", passwordHash, role: "admin", plan: "business" })
+    .values({ phone, name: SEED_ADMIN_NAME || "Administrateur", passwordHash, role: "admin" })
     .onConflictDoUpdate({ target: users.phone, set: { role: "admin" } });
+  // Profil société optionnel (variable SEED_COMPANY, JSON). Créé seulement s'il n'existe pas : jamais réécrit.
+  if (process.env.SEED_COMPANY) {
+    const parsed = companySchema.safeParse(JSON.parse(process.env.SEED_COMPANY));
+    if (!parsed.success) throw new Error(`SEED_COMPANY invalide : ${parsed.error.issues[0]?.message}`);
+    const d = parsed.data;
+    const [admin] = await db.select({ id: users.id }).from(users).where(eq(users.phone, phone)).limit(1);
+    const paymentNumbers: PaymentNumbers = {};
+    if (d.wave) paymentNumbers.wave = d.wave;
+    if (d.orangeMoney) paymentNumbers.orangeMoney = d.orangeMoney;
+    if (d.mtnMoney) paymentNumbers.mtnMoney = d.mtnMoney;
+    if (d.moovMoney) paymentNumbers.moovMoney = d.moovMoney;
+    await db
+      .insert(companies)
+      .values({ userId: admin.id, name: d.name, rccm: d.rccm, taxNumber: d.taxNumber, address: d.address, phone: d.phone, email: d.email, website: d.website, tagline: d.tagline, bankDetails: d.bankDetails, defaultNote: d.defaultNote, paymentNumbers })
+      .onConflictDoNothing({ target: companies.userId });
+    console.log("Profil société prêt.");
+  }
   await client.end();
   console.log(`Compte admin prêt : ${phone} (mot de passe inchangé s'il existait déjà)`);
 }

@@ -1,29 +1,20 @@
 import "server-only";
 import { count, desc, eq, gte, ilike, or, sql } from "drizzle-orm";
 import { getDb } from "@/lib/db";
-import { adminActions, documents, paymentRequests, users } from "@/lib/db/schema";
+import { adminActions, documents, users } from "@/lib/db/schema";
 import { computeAdminStats } from "@/lib/admin/stats";
 import { normalizePhone } from "@/lib/phone";
 
 export async function getAdminStats(now = new Date()) {
   const db = getDb();
   const [all, active] = await Promise.all([
-    db.select({ plan: users.plan, planExpiresAt: users.planExpiresAt, createdAt: users.createdAt, role: users.role }).from(users),
+    db.select({ createdAt: users.createdAt, role: users.role }).from(users),
     db
       .select({ n: sql<number>`count(distinct ${documents.userId})` })
       .from(documents)
       .where(gte(documents.createdAt, new Date(now.getTime() - 30 * 86_400_000))),
   ]);
   return computeAdminStats(all, Number(active[0]?.n ?? 0), now);
-}
-
-export async function listPendingRequests() {
-  return getDb()
-    .select({ request: paymentRequests, userName: users.name, userPhone: users.phone })
-    .from(paymentRequests)
-    .innerJoin(users, eq(users.id, paymentRequests.userId))
-    .where(eq(paymentRequests.status, "pending"))
-    .orderBy(paymentRequests.createdAt);
 }
 
 export async function listAdminUsers(search: string | undefined, limit = 100) {
@@ -39,8 +30,6 @@ export async function listAdminUsers(search: string | undefined, limit = 100) {
       name: users.name,
       phone: users.phone,
       role: users.role,
-      plan: users.plan,
-      planExpiresAt: users.planExpiresAt,
       suspendedAt: users.suspendedAt,
       createdAt: users.createdAt,
       documents: count(documents.id),
@@ -64,4 +53,3 @@ export async function listAdminActions(limit = 50) {
     .orderBy(desc(adminActions.createdAt))
     .limit(limit);
 }
-

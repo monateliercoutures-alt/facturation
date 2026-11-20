@@ -2,10 +2,8 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { getCompanyForUser } from "@/lib/company";
 import { invoiceStatus, todayISO } from "@/lib/documents/calc";
-import { effectivePlan, PLAN_FEATURES, PLAN_LABELS } from "@/lib/plans";
 import { getDashboard } from "@/lib/stats/queries";
 import { resolvePeriod } from "@/lib/stats/period";
-import { formatDate } from "@/lib/format";
 import { requireUser } from "@/lib/session";
 import { DashboardView } from "./dashboard-view";
 
@@ -15,7 +13,6 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
   const user = await requireUser();
   const sp = await searchParams;
   const today = todayISO();
-  const plan = effectivePlan(user);
   const period = resolvePeriod(sp.p, today, sp.from, sp.to);
   const [company, { dashboard, docs, installments }] = await Promise.all([getCompanyForUser(user.id), getDashboard(user.id, period, today)]);
 
@@ -35,11 +32,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
 
   return (
     <>
-      <h1 className="mb-1 text-2xl font-extrabold tracking-tight">Bonjour {user.name.split(" ")[0]}</h1>
-      <p className="mb-4 text-mut">
-        Plan {PLAN_LABELS[plan]}
-        {plan !== "free" && user.planExpiresAt ? ` · jusqu’au ${formatDate(user.planExpiresAt)}` : ""}
-      </p>
+      <h1 className="mb-4 text-2xl font-extrabold tracking-tight">Bonjour {user.name.split(" ")[0]}</h1>
       {!company ? (
         <section className="card mb-4 border-o/50">
           <h2 className="mb-1 text-lg font-extrabold">Complétez le profil de votre entreprise</h2>
@@ -47,7 +40,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
           <Link href="/app/entreprise" className="btn btn-orange">Renseigner mon entreprise</Link>
         </section>
       ) : null}
-      <DashboardView d={dashboard} period={period} recent={recent} company={company?.name ?? null} full={PLAN_FEATURES[plan].fullDashboard} canCsv={PLAN_FEATURES[plan].csvExport} />
+      <DashboardView d={dashboard} period={period} recent={recent} company={company?.name ?? null} />
     </>
   );
 }

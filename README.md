@@ -2,7 +2,7 @@
 
 SaaS de facturation pour PME, artisans et freelances de Côte d'Ivoire. Mobile-first, en français, en FCFA.
 
-**État : Prompts 1 à 4 terminés.** Comptes, documents, tableaux de bord, puis plans et abonnement, PWA, sécurité et guide de déploiement (`docs/DEPLOIEMENT.md`).
+**Outil privé de facturation** : comptes, documents, tableaux de bord, PWA, sécurité et guide de déploiement (`docs/DEPLOIEMENT.md`). Aucun forfait ni abonnement : toutes les fonctions sont ouvertes.
 
 Stack : Next.js 16 (App Router), TypeScript, Tailwind 4, Neon (PostgreSQL) + Drizzle, Auth.js, zod.
 
@@ -36,7 +36,7 @@ Tables et types dans le schéma PostgreSQL `factureci` (jamais `public`) : la ba
 
 ## Variables d'environnement
 
-`DATABASE_URL`, `AUTH_SECRET`, `ADMIN_PHONES` (numéros admin séparés par des virgules), `WAVE_LINK_PRO`, `WAVE_LINK_BUSINESS`, `APP_URL`. Détails dans `.env.example`.
+`DATABASE_URL`, `AUTH_SECRET`, `ADMIN_PHONES` (numéros admin séparés par des virgules), `APP_URL`, et facultatif `ALLOW_SIGNUP` (« yes » pour ouvrir l'inscription ; sinon réservée aux numéros ADMIN_PHONES) et `SEED_COMPANY` (profil société préremplie). Détails dans `.env.example`.
 
 Un utilisateur dont le téléphone figure dans `ADMIN_PHONES` reçoit le rôle admin à l'inscription et à chaque connexion.
 
@@ -70,28 +70,9 @@ Un utilisateur dont le téléphone figure dans `ADMIN_PHONES` reçoit le rôle a
 
 - **Utilisateur (`/app`)** : période (aujourd'hui, 7 jours, ce mois, mois dernier, cette année, personnalisée), 6 indicateurs, barres sur 12 mois, anneau par moyen de paiement, 5 meilleurs clients, relances WhatsApp, export CSV (`/app/export`).
 - **Définitions** dans `lib/stats/dashboard.ts` (fonctions pures, testées). Les factures annulées, les devis et les bons de livraison ne comptent jamais dans le chiffre d'affaires.
-- **Admin (`/admin`, rôle admin)** : indicateurs, validation ou rejet des demandes de paiement, liste des utilisateurs (changer de plan, suspendre, réinitialiser le mot de passe), journal des actions. Les comptes admin sont exclus du revenu et des abonnés.
-- **Valider un paiement** active le plan pour 30 jours (prolonge de 30 jours si le même plan est encore actif) et crée une facture d'abonnement, déjà payée, dans le compte de l'admin qui valide. Renseignez le profil entreprise de ce compte pour qu'elle porte votre en-tête.
+- **Admin (`/admin`, rôle admin)** : indicateurs, liste des utilisateurs (recherche, suspension, réinitialisation du mot de passe), journal des actions.
 - **Suspendre** coupe l'accès immédiatement (même avec une session ouverte) sans supprimer de données.
 - Migration `drizzle/0001_admin.sql` : colonne `users.suspended_at` et table `admin_actions`.
-
-## Plans et abonnement (Prompt 4)
-
-| | Gratuit | Pro (4 900 FCFA/mois) | Business (9 900 FCFA/mois) |
-|---|---|---|---|
-| Documents | 5 par mois | illimités | illimités |
-| Logo | non | oui | oui |
-| Mention « Créé avec FactureCI » sur le PDF | oui | non | non |
-| Envoi par e-mail | non | oui | oui |
-| Tableau de bord complet, relances WhatsApp | non | oui | oui |
-| Export CSV | non | non | oui |
-| Carnet de clients | 20 | 100 | illimité |
-| Utilisateurs | 1 | 1 | 3 (voir « Reste à faire ») |
-
-- Droits et prix : `lib/plans.ts`. Le blocage est fait côté serveur (création de document sous verrou par utilisateur, export, logo) ; l'interface affiche une page « Passez au plan Pro ».
-- À l'expiration, le plan effectif retombe sur Gratuit (calculé, rien n'est supprimé). Un rappel s'affiche 5 jours avant la fin.
-- Paiement sans API : bouton « Payer avec Wave » (`WAVE_LINK_*`), saisie de la référence, demande « en cours de vérification », validation par l'admin dans `/admin`.
-- Les limites du carnet de clients (20 / 100) sont un choix de ce projet : le cahier des charges ne précise que « illimité » pour Business.
 
 ## PWA et hors connexion
 
@@ -101,13 +82,12 @@ Un utilisateur dont le téléphone figure dans `ADMIN_PHONES` reçoit le rôle a
 
 ## Sécurité
 
-Limitation des tentatives (connexion : 10 par 15 min et par couple IP/numéro, 60 par IP ; inscription : 5 par heure et par IP), compteurs en base. Sessions `HttpOnly` et `Secure`, en-têtes de sécurité (CSP, HSTS, anti-cadre), propriété vérifiée sur chaque ressource, logo : 2 Mo maximum avant redimensionnement, type vérifié sur les octets réels, aucune clé côté client.
+Inscription fermée au public (réservée aux numéros ADMIN_PHONES). Limitation des tentatives (connexion : 10 par 15 min et par couple IP/numéro, 60 par IP ; inscription : 5 par heure et par IP), compteurs en base. Sessions `HttpOnly` et `Secure`, en-têtes de sécurité (CSP, HSTS, anti-cadre), propriété vérifiée sur chaque ressource, logo : 2 Mo maximum avant redimensionnement, type vérifié sur les octets réels, aucune clé côté client.
 
 ## Reste à faire (version 2)
 
 - Plusieurs utilisateurs sur la même entreprise (Business, jusqu'à 3) : annoncé « bientôt disponible », non construit.
 - Envoi d'e-mail avec le PDF en pièce jointe (Resend) : brancher un `EmailSender` dans `lib/documents/email.ts`.
-- Paiement automatique de l'abonnement (aujourd'hui : validation manuelle).
 - Relances programmées (aujourd'hui : un clic par relance).
 - Réinitialisation du mot de passe en libre-service (aujourd'hui : par l'admin).
 - CSP avec nonce (aujourd'hui `'unsafe-inline'` pour les scripts de démarrage de Next.js).

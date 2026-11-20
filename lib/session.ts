@@ -16,7 +16,7 @@ export const requireUser = cache(async () => {
   const id = session?.user?.id;
   if (!id) redirect("/connexion");
   const [user] = await getDb()
-    .select({ id: users.id, name: users.name, phone: users.phone, email: users.email, role: users.role, plan: users.plan, planExpiresAt: users.planExpiresAt, suspendedAt: users.suspendedAt })
+    .select({ id: users.id, name: users.name, phone: users.phone, email: users.email, role: users.role, suspendedAt: users.suspendedAt })
     .from(users)
     .where(eq(users.id, id))
     .limit(1);

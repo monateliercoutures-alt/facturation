@@ -1,6 +1,5 @@
 import { deriveSheet, type SheetData } from "@/lib/documents/sheet";
 import { amountSentence } from "@/lib/documents/words";
-import { MENTION_TEXT } from "@/lib/plans";
 import { formatAmount, formatDate, formatFCFA } from "@/lib/format";
 import { formatPhone } from "@/lib/phone";
 
@@ -180,7 +179,6 @@ export function DocumentSheet({ data }: { data: SheetData }) {
       <div className="mt-5 border-t border-[#D9E2DB] pt-3 text-center text-xs text-[#5B6B62]">
         {traits.priced ? <p className="mb-1 font-semibold text-[#12261C]">Merci de votre confiance.{d.contact.length ? ` Une question sur ce document ? ${d.contact.slice(0, 2).join(" · ")}` : ""}</p> : null}
         {[data.company.name, ...d.identity].join(" · ")}
-        {data.mention ? <p className="mt-1">{MENTION_TEXT}</p> : null}
       </div>
     </article>
   );

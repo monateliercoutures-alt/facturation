@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import { formatDate } from "@/lib/format";
 import { formatPhone } from "@/lib/phone";
 import { requireUser } from "@/lib/session";
 
@@ -11,8 +10,6 @@ export default async function AccountPage() {
     ["Nom", user.name],
     ["Téléphone", formatPhone(user.phone)],
     ["E-mail", user.email ?? "Non renseigné"],
-    ["Plan", { free: "Gratuit", pro: "Pro", business: "Business" }[user.plan]],
-    ["Expiration du plan", user.planExpiresAt ? formatDate(user.planExpiresAt) : "—"],
   ];
   return (
     <>

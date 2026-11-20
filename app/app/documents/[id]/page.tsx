@@ -12,8 +12,6 @@ import { documentMessage, publicUrl, smsLink, whatsappLink } from "@/lib/documen
 import { toSheet } from "@/lib/documents/to-sheet";
 import { formatDate, formatFCFA } from "@/lib/format";
 import { appOrigin } from "@/lib/origin";
-import { UpgradeNotice } from "@/components/upgrade-notice";
-import { PLAN_FEATURES } from "@/lib/plans";
 import { requireUser } from "@/lib/session";
 
 export const metadata: Metadata = { title: "Document" };
@@ -53,8 +51,7 @@ export default async function DocumentPage({ params, searchParams }: { params: P
       {!cancelled ? (
         <section className="card mb-4" aria-label="Envoyer">
           <a className="btn btn-orange" href={whatsappLink(client?.phone, message)} target="_blank" rel="noopener noreferrer">Envoyer sur WhatsApp</a>
-          {mail && PLAN_FEATURES[view.ownerPlan].email ? <a className="btn mt-2" href={mail}>Envoyer par e-mail</a> : null}
-          {!PLAN_FEATURES[view.ownerPlan].email ? <div className="mt-2"><UpgradeNotice compact title="L’envoi par e-mail est réservé au plan Pro" /></div> : null}
+          {mail ? <a className="btn mt-2" href={mail}>Envoyer par e-mail</a> : null}
           <a className="btn btn-ghost mt-2" href={`/app/documents/${doc.id}/pdf`} target="_blank" rel="noopener noreferrer">Télécharger le PDF</a>
           <div className="mt-2 grid grid-cols-2 gap-2">
             <CopyButton text={link} />

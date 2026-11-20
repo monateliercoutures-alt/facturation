@@ -7,6 +7,7 @@ import { signIn, signOut } from "@/auth";
 import { getDb } from "@/lib/db";
 import { users } from "@/lib/db/schema";
 import { hashPassword } from "@/lib/password";
+import { canSignUp } from "@/lib/access";
 import { isAdminPhone } from "@/lib/phone";
 import { fieldErrors, signInSchema, signUpSchema, type FieldErrors } from "@/lib/validation";
 
@@ -28,6 +29,9 @@ export async function signUpAction(_prev: FormState, formData: FormData): Promis
   if (!parsed.success) return { errors: fieldErrors(parsed.error), values: kept };
 
   const { name, phone, email, password } = parsed.data;
+  if (!canSignUp(phone)) {
+    return { errors: { phone: "Les inscriptions sont fermées. Cet outil est réservé à son propriétaire." }, values: kept };
+  }
   // Limitation des inscriptions : 5 par heure et par adresse IP.
   const limit = await hit(getDb(), `signup:${clientIp(await headers())}`, RULES.signup);
   if (!limit.allowed) return { message: "Trop d'inscriptions depuis cette connexion. Réessayez dans une heure.", values: kept };

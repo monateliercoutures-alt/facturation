@@ -2,7 +2,6 @@ import Link from "next/link";
 import { DueList } from "@/components/due-list";
 import { MethodDonut, MonthlyBars } from "@/components/charts";
 import type { DocumentType } from "@/lib/db/schema";
-import { UpgradeNotice } from "@/components/upgrade-notice";
 import { StatusPill } from "@/components/status-pill";
 import { methodLabel, TYPE_TRAITS, type DocumentStatus } from "@/lib/documents/calc";
 import type { Dashboard } from "@/lib/stats/dashboard";
@@ -21,7 +20,7 @@ function Kpi({ label, value, sub, tone }: { label: string; value: string; sub?: 
   );
 }
 
-export function DashboardView({ d, period, recent, company, full, canCsv }: { d: Dashboard; period: Period; recent: Recent[]; company: string | null; full: boolean; canCsv: boolean }) {
+export function DashboardView({ d, period, recent, company }: { d: Dashboard; period: Period; recent: Recent[]; company: string | null }) {
   const qs = (p: Period) => (p.key === "custom" ? `p=custom&from=${p.from}&to=${p.to}` : `p=${p.key}`);
   const hasData = d.invoiced > 0 || d.toCollect > 0 || d.monthly.some((m) => m.invoiced > 0) || recent.length > 0;
   return (
@@ -67,8 +66,6 @@ export function DashboardView({ d, period, recent, company, full, canCsv }: { d:
         <Kpi label="Bons de livraison" value={String(d.deliveries)} sub="Sur la période" />
       </section>
 
-      {full ? (
-        <>
       <section className="card mb-5">
         <h2 className="mb-2 text-lg font-extrabold">Facturé et encaissé, 12 mois</h2>
         <MonthlyBars data={d.monthly.map((m) => ({ label: monthLabel(m.month), invoiced: m.invoiced, collected: m.collected }))} />
@@ -106,14 +103,6 @@ export function DashboardView({ d, period, recent, company, full, canCsv }: { d:
         {d.overdueRows.length === 0 ? <p className="text-mut">Aucune facture en retard. Bravo !</p> : <DueList rows={d.overdueRows} company={company} late />}
       </section>
 
-        </>
-      ) : (
-        <section className="mb-5" aria-label="Tableau de bord complet">
-          <UpgradeNotice title="Le tableau de bord complet est réservé au plan Pro">
-            Graphiques sur 12 mois, encaissements par moyen de paiement, meilleurs clients, échéances de la semaine et relances WhatsApp en un clic.
-          </UpgradeNotice>
-        </section>
-      )}
 
       <section className="card mb-5">
         <div className="mb-2 flex items-center justify-between"><h2 className="text-lg font-extrabold">Derniers documents</h2><Link href="/app/documents" className="text-sm font-semibold text-g underline">Tout voir</Link></div>
@@ -133,7 +122,6 @@ export function DashboardView({ d, period, recent, company, full, canCsv }: { d:
         )}
       </section>
 
-      {canCsv ? (
       <section className="card" aria-label="Export">
         <h2 className="mb-1 text-lg font-extrabold">Export pour votre comptable</h2>
         <p className="mb-3 text-mut">Fichiers CSV (Excel) pour la période affichée.</p>
@@ -142,9 +130,6 @@ export function DashboardView({ d, period, recent, company, full, canCsv }: { d:
           <a className="btn btn-ghost" href={`/app/export?kind=payments&${qs(period)}`} download>Exporter les paiements</a>
         </div>
       </section>
-      ) : (
-        <UpgradeNotice plan="business" title="L’export CSV pour votre comptable est réservé au plan Business" />
-      )}
     </>
   );
 }

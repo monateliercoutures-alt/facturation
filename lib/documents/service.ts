@@ -1,10 +1,9 @@
 import "server-only";
 import { randomBytes } from "node:crypto";
-import { and, asc, count, desc, eq, gte, inArray, sql } from "drizzle-orm";
+import { and, asc, desc, eq, inArray, sql } from "drizzle-orm";
 import { getDb, type Db } from "@/lib/db";
-import { clients, companies, documentItems, documents, installments, users, type DocumentType, type PaymentNumbers } from "@/lib/db/schema";
-import { computeTotals, installmentLabels, invoiceStatus, todayISO, TYPE_TRAITS, type DocumentStatus } from "@/lib/documents/calc";
-import { effectivePlan, PLAN_FEATURES, type PlanKey } from "@/lib/plans";
+import { clients, companies, documentItems, documents, installments, type DocumentType, type PaymentNumbers } from "@/lib/db/schema";
+import { computeTotals, installmentLabels, invoiceStatus, TYPE_TRAITS, type DocumentStatus } from "@/lib/documents/calc";
 import type { DocumentData } from "@/lib/documents/schema";
 import { nextDocumentNumber } from "@/lib/numbering";
 import { currentYear } from "@/lib/format";
@@ -17,8 +16,6 @@ export type DocumentView = {
   installments: (typeof installments.$inferSelect)[];
   client: typeof clients.$inferSelect | null;
   company: typeof companies.$inferSelect | null;
-  /** Plan effectif du propriétaire : décide du logo et de la mention « Créé avec FactureCI ». */
-  ownerPlan: PlanKey;
 };
 
 type Tx = Parameters<Parameters<Db["transaction"]>[0]>[0];
@@ -32,32 +29,6 @@ export class DocumentError extends Error {
   }
 }
 
-/** Limite du plan atteinte : l'interface affiche la page « Passez au plan Pro » au lieu d'une erreur. */
-export class PlanLimitError extends Error {
-  constructor(
-    public kind: "documents" | "clients",
-    public plan: PlanKey,
-  ) {
-    super(kind === "documents" ? "Limite de documents du mois atteinte." : "Limite du carnet de clients atteinte.");
-  }
-}
-
-/** Premier jour du mois courant (fuseau Africa/Abidjan = UTC), à minuit. */
-export function monthStart(now = new Date()): Date {
-  const [y, m] = todayISO(now).split("-").map(Number);
-  return new Date(Date.UTC(y, m - 1, 1));
-}
-
-export async function countDocumentsThisMonth(db: Db | Tx, userId: string): Promise<number> {
-  const [row] = await db.select({ n: count() }).from(documents).where(and(eq(documents.userId, userId), gte(documents.createdAt, monthStart())));
-  return Number(row?.n ?? 0);
-}
-
-export async function planOf(db: Db | Tx, userId: string): Promise<PlanKey> {
-  const [u] = await db.select({ plan: users.plan, planExpiresAt: users.planExpiresAt, role: users.role }).from(users).where(eq(users.id, userId)).limit(1);
-  return u ? effectivePlan(u) : "free";
-}
-
 function newShareToken() {
   return randomBytes(24).toString("base64url");
 }
@@ -67,14 +38,13 @@ function displayStatus(doc: { type: string; status: DocumentStatus }, inst: (typ
 }
 
 async function loadParts(db: Db | Tx, doc: typeof documents.$inferSelect): Promise<DocumentView> {
-  const [items, inst, client, company, ownerPlan] = await Promise.all([
+  const [items, inst, client, company] = await Promise.all([
     db.select().from(documentItems).where(eq(documentItems.documentId, doc.id)).orderBy(asc(documentItems.position)),
     db.select().from(installments).where(eq(installments.documentId, doc.id)).orderBy(asc(installments.position)),
     doc.clientId ? db.select().from(clients).where(and(eq(clients.id, doc.clientId), eq(clients.userId, doc.userId))).limit(1) : Promise.resolve([]),
     db.select().from(companies).where(eq(companies.userId, doc.userId)).limit(1),
-    planOf(db, doc.userId),
   ]);
-  return { doc, status: displayStatus(doc, inst), items, installments: inst, client: client[0] ?? null, company: company[0] ?? null, ownerPlan };
+  return { doc, status: displayStatus(doc, inst), items, installments: inst, client: client[0] ?? null, company: company[0] ?? null };
 }
 
 /** Document d'un utilisateur. Un identifiant d'un autre utilisateur donne null (jamais de fuite). */
@@ -177,13 +147,8 @@ export async function createDocument(userId: string, data: DocumentData, outer?:
   }
 
   return db.transaction(async (tx) => {
-    // Verrou par utilisateur : deux créations simultanées ne peuvent pas dépasser la limite du plan.
+    // Verrou par utilisateur : deux créations simultanées du même utilisateur sont traitées l'une après l'autre.
     await tx.execute(sql`select pg_advisory_xact_lock(hashtext(${userId}))`);
-    const userPlan = await planOf(tx, userId);
-    const features = PLAN_FEATURES[userPlan];
-    if (Number.isFinite(features.documentsPerMonth) && (await countDocumentsThisMonth(tx, userId)) >= features.documentsPerMonth) {
-      throw new PlanLimitError("documents", userPlan);
-    }
 
     // Client : existant (vérifié par user_id) ou créé automatiquement.
     let clientId: string | null = null;
@@ -199,10 +164,6 @@ export async function createDocument(userId: string, data: DocumentData, outer?:
     if (clientId) {
       await tx.update(clients).set(clientFields).where(and(eq(clients.id, clientId), eq(clients.userId, userId)));
     } else {
-      if (Number.isFinite(features.clients)) {
-        const [{ n }] = await tx.select({ n: count() }).from(clients).where(eq(clients.userId, userId));
-        if (Number(n) >= features.clients) throw new PlanLimitError("clients", userPlan);
-      }
       [{ id: clientId }] = await tx.insert(clients).values({ userId, ...clientFields }).returning({ id: clients.id });
     }
 
