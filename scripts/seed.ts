@@ -1,3 +1,5 @@
+import { readFileSync, existsSync } from "node:fs";
+import path from "node:path";
 import { loadEnvConfig } from "@next/env";
 import { drizzle } from "drizzle-orm/postgres-js";
 import { eq } from "drizzle-orm";
@@ -28,7 +30,11 @@ async function main() {
     .onConflictDoUpdate({ target: users.phone, set: process.env.SEED_ADMIN_RESET === "yes" ? { role: "admin", passwordHash } : { role: "admin" } });
   // Profil société optionnel (variable SEED_COMPANY, JSON). Créé seulement s'il n'existe pas : jamais réécrit.
   if (process.env.SEED_COMPANY) {
-    const parsed = companySchema.safeParse(JSON.parse(process.env.SEED_COMPANY));
+    const raw = JSON.parse(process.env.SEED_COMPANY) as Record<string, unknown>;
+    // Logo optionnel : scripts/seed-logo.png (PNG déjà redimensionné), utilisé si SEED_COMPANY n'en fournit pas.
+    const logoFile = path.join(process.cwd(), "scripts", "seed-logo.png");
+    if (!raw.logo && existsSync(logoFile)) raw.logo = `data:image/png;base64,${readFileSync(logoFile).toString("base64")}`;
+    const parsed = companySchema.safeParse(raw);
     if (!parsed.success) throw new Error(`SEED_COMPANY invalide : ${parsed.error.issues[0]?.message}`);
     const d = parsed.data;
     const [admin] = await db.select({ id: users.id }).from(users).where(eq(users.phone, phone)).limit(1);
@@ -39,7 +45,7 @@ async function main() {
     if (d.moovMoney) paymentNumbers.moovMoney = d.moovMoney;
     await db
       .insert(companies)
-      .values({ userId: admin.id, name: d.name, rccm: d.rccm, taxNumber: d.taxNumber, address: d.address, phone: d.phone, email: d.email, website: d.website, tagline: d.tagline, bankDetails: d.bankDetails, defaultNote: d.defaultNote, paymentNumbers })
+      .values({ userId: admin.id, name: d.name, logo: d.logo, rccm: d.rccm, taxNumber: d.taxNumber, address: d.address, phone: d.phone, email: d.email, website: d.website, tagline: d.tagline, bankDetails: d.bankDetails, defaultNote: d.defaultNote, paymentNumbers })
       .onConflictDoNothing({ target: companies.userId });
     console.log("Profil société prêt.");
   }
