@@ -93,6 +93,11 @@ export const companySchema = z.object({
     .pipe(z.email("Adresse e-mail invalide.").nullable()),
   website: optionalText(200),
   tagline: optionalText(120),
+  brandColor: z
+    .string()
+    .optional()
+    .transform((v) => v?.trim() || null)
+    .pipe(z.string().regex(/^#[0-9a-fA-F]{6}$/, "Couleur invalide.").nullable()),
   bankDetails: optionalText(400),
 });
 

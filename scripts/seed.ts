@@ -2,7 +2,7 @@ import { readFileSync, existsSync } from "node:fs";
 import path from "node:path";
 import { loadEnvConfig } from "@next/env";
 import { drizzle } from "drizzle-orm/postgres-js";
-import { eq } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import postgres from "postgres";
 import { companies, users, type PaymentNumbers } from "../lib/db/schema";
 import { companySchema } from "../lib/validation";
@@ -45,8 +45,12 @@ async function main() {
     if (d.moovMoney) paymentNumbers.moovMoney = d.moovMoney;
     await db
       .insert(companies)
-      .values({ userId: admin.id, name: d.name, logo: d.logo, rccm: d.rccm, taxNumber: d.taxNumber, address: d.address, phone: d.phone, email: d.email, website: d.website, tagline: d.tagline, bankDetails: d.bankDetails, defaultNote: d.defaultNote, paymentNumbers })
-      .onConflictDoNothing({ target: companies.userId });
+      .values({ userId: admin.id, name: d.name, logo: d.logo, rccm: d.rccm, taxNumber: d.taxNumber, address: d.address, phone: d.phone, email: d.email, website: d.website, tagline: d.tagline, brandColor: d.brandColor, bankDetails: d.bankDetails, defaultNote: d.defaultNote, paymentNumbers })
+      .onConflictDoUpdate({
+        target: companies.userId,
+        // Profil existant : jamais réécrit, sauf la couleur et le logo s'ils n'ont pas encore été choisis.
+        set: { brandColor: sql`coalesce(${companies.brandColor}, ${d.brandColor})`, logo: sql`coalesce(${companies.logo}, ${d.logo})` },
+      });
     console.log("Profil société prêt.");
   }
   await client.end();

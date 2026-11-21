@@ -1,0 +1,1 @@
+ALTER TABLE "factureci"."companies" ADD COLUMN "brand_color" text;

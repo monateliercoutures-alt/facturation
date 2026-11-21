@@ -24,7 +24,7 @@ import { formatPhone } from "@/lib/phone";
 type ClientOption = { id: string; name: string; phone: string | null; email: string | null; address: string | null };
 type CompanyInfo = {
   name: string; logo: string | null; rccm: string | null; taxNumber: string | null; address: string | null; phone: string | null;
-  email: string | null; website: string | null; tagline: string | null; bankDetails: string | null;
+  email: string | null; website: string | null; tagline: string | null; brandColor: string | null; bankDetails: string | null;
   paymentNumbers: PaymentNumbers; defaultNote: string | null;
 };
 type ItemState = { description: string; quantity: string; unitPrice: string; unit: string; delivered: string; observation: string };
@@ -100,7 +100,7 @@ export function DocumentForm({ initial, company, clients, today, userId }: { ini
       number: "À attribuer",
       issueDate: today,
       dueDate: dueDate || null,
-      company: { name: company.name, logo: company.logo, rccm: company.rccm, taxNumber: company.taxNumber, address: company.address, phone: company.phone, email: company.email, website: company.website, tagline: company.tagline, bankDetails: company.bankDetails },
+      company: { name: company.name, logo: company.logo, rccm: company.rccm, taxNumber: company.taxNumber, address: company.address, phone: company.phone, email: company.email, website: company.website, tagline: company.tagline, brandColor: company.brandColor, bankDetails: company.bankDetails },
       client: { name: client.name || "Nom du client", phone: client.phone || null, email: client.email || null, address: client.address || null },
       items: parsedItems.map((i) => ({ description: i.description || "…", quantity: Number.isFinite(i.quantity) ? i.quantity : 0, unitPrice: i.unitPrice, unit: i.unit, quantityDelivered: i.quantityDelivered, observation: i.observation })),
       ...totals,

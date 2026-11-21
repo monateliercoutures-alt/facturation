@@ -9,7 +9,7 @@ export type SheetData = {
   number: string;
   issueDate: string;
   dueDate: string | null;
-  company: { name: string; logo: string | null; rccm: string | null; taxNumber: string | null; address: string | null; phone: string | null; email: string | null; website: string | null; tagline: string | null; bankDetails: string | null };
+  company: { name: string; logo: string | null; rccm: string | null; taxNumber: string | null; address: string | null; phone: string | null; email: string | null; website: string | null; tagline: string | null; brandColor: string | null; bankDetails: string | null };
   client: { name: string; phone: string | null; email: string | null; address: string | null };
   items: { description: string; quantity: number; unitPrice: number; unit: string | null; quantityDelivered: number | null; observation: string | null }[];
   subtotal: number;

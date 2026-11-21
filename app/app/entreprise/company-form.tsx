@@ -67,6 +67,13 @@ export function CompanyForm({ company, welcome }: { company: Company | null; wel
         <Field name="tagline" label="Slogan (facultatif)" defaultValue={v("tagline", company?.tagline)} key={k("tagline")} error={e.tagline} placeholder="Ex. Menuiserie et agencement sur mesure" maxLength={120} />
 
         <div className="mb-4">
+          <label htmlFor="f-brandColor" className="field-label">Couleur des documents</label>
+          <input id="f-brandColor" name="brandColor" type="color" defaultValue={v("brandColor", company?.brandColor) || "#0E6B43"} key={k("brandColor")} className="input h-12 w-24 p-1" />
+          <p className="hint">Les titres, bandeaux et totaux de vos factures, devis et bons prennent cette couleur (celle de votre logo).</p>
+          {e.brandColor ? <p className="field-error">{e.brandColor}</p> : null}
+        </div>
+
+        <div className="mb-4">
           <span className="field-label">Logo</span>
           {logo && !removed ? (
             // eslint-disable-next-line @next/next/no-img-element -- aperçu local

@@ -79,6 +79,8 @@ export const companies = app.table(
     website: text("website"),
     /** Slogan affiché sous le nom de l'entreprise. */
     tagline: text("tagline"),
+    /** Couleur principale des documents (#RRGGBB), reprise du logo. */
+    brandColor: text("brand_color"),
     /** RIB / IBAN affiché sur les documents quand « Virement » est accepté. */
     bankDetails: text("bank_details"),
     createdAt: createdAt(),

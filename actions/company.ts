@@ -34,6 +34,7 @@ export async function saveCompanyAction(_prev: FormState, formData: FormData): P
     email: d.email,
     website: d.website,
     tagline: d.tagline,
+    brandColor: d.brandColor,
     bankDetails: d.bankDetails,
     // Logo : nouveau fichier, suppression demandée, ou inchangé (undefined = ne pas toucher).
     ...(d.logo ? { logo: d.logo } : d.removeLogo ? { logo: null } : {}),

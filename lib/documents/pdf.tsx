@@ -4,24 +4,24 @@ import { amountSentence } from "@/lib/documents/words";
 import { formatAmount, formatDate, formatFCFA } from "@/lib/format";
 import { formatPhone } from "@/lib/phone";
 
-const GREEN = "#0E6B43";
+const DEFAULT_BRAND = "#0E6B43";
 const MUTED = "#5B6B62";
 const LINE = "#D9E2DB";
 const SOFT = "#F5F8F4";
 
 const s = StyleSheet.create({
   page: { paddingTop: 34, paddingHorizontal: 36, paddingBottom: 64, fontSize: 9.5, fontFamily: "Helvetica", color: "#12261C" },
-  head: { flexDirection: "row", justifyContent: "space-between", paddingBottom: 12, marginBottom: 12, borderBottomWidth: 2.5, borderBottomColor: GREEN },
+  head: { flexDirection: "row", justifyContent: "space-between", paddingBottom: 12, marginBottom: 12, borderBottomWidth: 2.5 },
   logo: { maxHeight: 44, maxWidth: 140, marginBottom: 4, objectFit: "contain" },
   company: { fontSize: 14, fontFamily: "Helvetica-Bold" },
   muted: { color: MUTED },
   right: { textAlign: "right" },
-  title: { fontSize: 16, fontFamily: "Helvetica-Bold", color: GREEN, marginBottom: 3 },
+  title: { fontSize: 16, fontFamily: "Helvetica-Bold", marginBottom: 3 },
   bold: { fontFamily: "Helvetica-Bold" },
   parties: { flexDirection: "row", gap: 10, marginBottom: 10 },
   box: { flex: 1, backgroundColor: SOFT, padding: 8, borderRadius: 6 },
   small: { fontSize: 7.5, color: MUTED, marginBottom: 2, fontFamily: "Helvetica-Bold" },
-  th: { flexDirection: "row", backgroundColor: GREEN, color: "#fff", fontSize: 8, fontFamily: "Helvetica-Bold", paddingVertical: 5, paddingHorizontal: 4 },
+  th: { flexDirection: "row", color: "#fff", fontSize: 8, fontFamily: "Helvetica-Bold", paddingVertical: 5, paddingHorizontal: 4 },
   tr: { flexDirection: "row", paddingVertical: 4, paddingHorizontal: 4 },
   zebra: { backgroundColor: SOFT },
   cDesc: { flex: 1, paddingRight: 6 },
@@ -32,7 +32,7 @@ const s = StyleSheet.create({
   cObs: { width: 120, paddingLeft: 6 },
   totals: { alignSelf: "flex-end", width: 230, marginTop: 8, marginBottom: 8 },
   tot: { flexDirection: "row", justifyContent: "space-between", paddingVertical: 1.5 },
-  grand: { flexDirection: "row", justifyContent: "space-between", backgroundColor: GREEN, color: "#fff", paddingVertical: 4, paddingHorizontal: 6, marginVertical: 2, borderRadius: 4, fontSize: 11, fontFamily: "Helvetica-Bold" },
+  grand: { flexDirection: "row", justifyContent: "space-between", color: "#fff", paddingVertical: 4, paddingHorizontal: 6, marginVertical: 2, borderRadius: 4, fontSize: 11, fontFamily: "Helvetica-Bold" },
   h: { fontFamily: "Helvetica-Bold", marginBottom: 3 },
   inst: { flexDirection: "row", justifyContent: "space-between", paddingVertical: 3, borderBottomWidth: 0.5, borderBottomColor: LINE },
   sign: { flexDirection: "row", gap: 10, marginTop: 18 },
@@ -44,13 +44,14 @@ const s = StyleSheet.create({
 export function DocumentPdf({ data }: { data: SheetData }) {
   const d = deriveSheet(data);
   const { traits, isBL } = d;
+  const brand = data.company.brandColor ?? DEFAULT_BRAND;
   // @react-pdf ne lit que PNG et JPEG : un logo WebP est ignoré plutôt que de faire échouer le PDF.
   const logo = data.company.logo && /^data:image\/(png|jpeg);/.test(data.company.logo) ? data.company.logo : null;
   const shipTo = isBL ? (data.deliveryAddress ?? data.client.address) : data.deliveryAddress;
   return (
     <Document title={`${traits.singular} ${data.number}`} author={data.company.name} language="fr">
       <Page size="A4" style={s.page}>
-        <View style={s.head}>
+        <View style={[s.head, { borderBottomColor: brand }]}>
           <View style={{ maxWidth: 300 }}>
             {/* eslint-disable-next-line jsx-a11y/alt-text -- composant PDF, pas une balise HTML */}
             {logo ? <Image src={logo} style={s.logo} /> : null}
@@ -61,7 +62,7 @@ export function DocumentPdf({ data }: { data: SheetData }) {
             {d.identity.length ? <Text style={s.muted}>{d.identity.join("  ·  ")}</Text> : null}
           </View>
           <View style={s.right}>
-            <Text style={s.title}>{traits.upper}</Text>
+            <Text style={[s.title, { color: brand }]}>{traits.upper}</Text>
             <Text style={[s.bold, { fontSize: 11 }]}>N° {data.number}</Text>
             <Text style={s.muted}>Date : {formatDate(data.issueDate)}</Text>
             {data.dueDate ? <Text style={s.bold}>{traits.dueLabel} : {formatDate(data.dueDate)}</Text> : null}
@@ -92,7 +93,7 @@ export function DocumentPdf({ data }: { data: SheetData }) {
           </Text>
         ) : null}
 
-        <View style={s.th} fixed>
+        <View style={[s.th, { backgroundColor: brand }]} fixed>
           <Text style={s.cDesc}>DÉSIGNATION</Text>
           <Text style={s.cQty}>{isBL ? "COMMANDÉ" : "QTÉ"}</Text>
           {isBL ? <Text style={s.cQty}>LIVRÉ</Text> : null}
@@ -140,7 +141,7 @@ export function DocumentPdf({ data }: { data: SheetData }) {
                   <Text>{formatFCFA(data.vatAmount)}</Text>
                 </View>
               ) : null}
-              <View style={s.grand}>
+              <View style={[s.grand, { backgroundColor: brand }]}>
                 <Text>{d.totalLabel}</Text>
                 <Text>{formatFCFA(data.total)}</Text>
               </View>

@@ -5,7 +5,7 @@ import { documentInputSchema } from "@/lib/documents/schema";
 
 const base: SheetData = {
   type: "FAC", number: "FAC-2026-001", issueDate: "2026-11-18", dueDate: null,
-  company: { name: "Atelier", logo: null, rccm: "CI-ABJ-1", taxNumber: "123", address: null, phone: "+2250700000000", email: "a@b.ci", website: null, tagline: null, bankDetails: "BICICI 123" },
+  company: { name: "Atelier", logo: null, rccm: "CI-ABJ-1", taxNumber: "123", address: null, phone: "+2250700000000", email: "a@b.ci", website: null, tagline: null, brandColor: null, bankDetails: "BICICI 123" },
   client: { name: "Brou", phone: null, email: null, address: null },
   items: [{ description: "Table", quantity: 1, unitPrice: 100000, unit: "u", quantityDelivered: null, observation: null }],
   subtotal: 100000, discountPercent: 10, discountAmount: 10000, vatPercent: 18, vatAmount: 16200, total: 106200,

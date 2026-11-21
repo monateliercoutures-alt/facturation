@@ -19,6 +19,7 @@ export function toSheet(view: DocumentView): SheetData {
       email: company?.email ?? null,
       website: company?.website ?? null,
       tagline: company?.tagline ?? null,
+      brandColor: company?.brandColor ?? null,
       bankDetails: company?.bankDetails ?? null,
     },
     client: { name: client?.name ?? "Client", phone: client?.phone ?? null, email: client?.email ?? null, address: client?.address ?? null },

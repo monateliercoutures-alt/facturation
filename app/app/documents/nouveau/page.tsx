@@ -108,6 +108,7 @@ export default async function NewDocumentPage({ searchParams }: { searchParams: 
           email: company.email,
           website: company.website,
           tagline: company.tagline,
+          brandColor: company.brandColor,
           bankDetails: company.bankDetails,
           paymentNumbers: company.paymentNumbers,
           defaultNote: company.defaultNote,

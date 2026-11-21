@@ -3,11 +3,12 @@ import { amountSentence } from "@/lib/documents/words";
 import { formatAmount, formatDate, formatFCFA } from "@/lib/format";
 import { formatPhone } from "@/lib/phone";
 
-const GREEN = "#0E6B43";
+const DEFAULT_BRAND = "#0E6B43";
 
 /** Aperçu du document : même contenu que le PDF. Reste blanc en mode sombre, comme une feuille imprimée. */
 export function DocumentSheet({ data }: { data: SheetData }) {
   const d = deriveSheet(data);
+  const GREEN = data.company.brandColor ?? DEFAULT_BRAND;
   const { traits, isBL } = d;
   const shipTo = isBL ? (data.deliveryAddress ?? data.client.address) : data.deliveryAddress;
 
