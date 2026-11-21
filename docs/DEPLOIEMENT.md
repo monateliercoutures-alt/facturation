@@ -29,7 +29,6 @@ Dans l'écran d'import (ou plus tard : **Settings → Environment Variables**), 
 | `AUTH_SECRET` | une longue valeur aléatoire : `openssl rand -base64 33` (ou `npx auth secret`) |
 | `AUTH_TRUST_HOST` | `true` |
 | `ADMIN_PHONES` | vos numéros admin séparés par des virgules, ex. `0700000000,0500000000` |
-| `ALLOW_SIGNUP` | facultatif : `yes` ouvre l'inscription à tous (sinon seuls les numéros de `ADMIN_PHONES` peuvent s'inscrire) |
 | `SEED_COMPANY` | facultatif : profil société préremplie (JSON, voir `.env.example`) |
 | `APP_URL` | l'adresse du site, ex. `https://factureci.vercel.app` (sans `/` final) |
 
@@ -71,7 +70,7 @@ Le numéro doit figurer dans `ADMIN_PHONES` sur Vercel. Puis :
 npm run db:seed
 ```
 
-Supprimez ensuite `SEED_ADMIN_PASSWORD` de `.env.local`. Connectez-vous sur le site avec ce numéro : le lien « Admin » apparaît dans le menu.
+Supprimez ensuite `SEED_ADMIN_PASSWORD` de `.env.local`. Connectez-vous sur le site avec ce numéro (il n'y a pas d'inscription publique) : le lien « Admin » apparaît dans le menu.
 
 ## 7. Tester en production
 

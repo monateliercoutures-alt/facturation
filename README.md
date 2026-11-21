@@ -36,9 +36,9 @@ Tables et types dans le schéma PostgreSQL `factureci` (jamais `public`) : la ba
 
 ## Variables d'environnement
 
-`DATABASE_URL`, `AUTH_SECRET`, `ADMIN_PHONES` (numéros admin séparés par des virgules), `APP_URL`, et facultatif `ALLOW_SIGNUP` (« yes » pour ouvrir l'inscription ; sinon réservée aux numéros ADMIN_PHONES) et `SEED_COMPANY` (profil société préremplie). Détails dans `.env.example`.
+`DATABASE_URL`, `AUTH_SECRET`, `ADMIN_PHONES` (numéros admin séparés par des virgules), `APP_URL`, et facultatif `SEED_COMPANY` (profil société préremplie) et `SEED_ADMIN_RESET`. Détails dans `.env.example`.
 
-Un utilisateur dont le téléphone figure dans `ADMIN_PHONES` reçoit le rôle admin à l'inscription et à chaque connexion.
+Il n'y a pas d'inscription : le compte du propriétaire est créé au déploiement (`SEED_ADMIN_*`). Un utilisateur dont le téléphone figure dans `ADMIN_PHONES` reçoit le rôle admin à chaque connexion. La session dure un an : une seule connexion par appareil.
 
 ## Choix techniques
 
@@ -82,7 +82,7 @@ Un utilisateur dont le téléphone figure dans `ADMIN_PHONES` reçoit le rôle a
 
 ## Sécurité
 
-Inscription fermée au public (réservée aux numéros ADMIN_PHONES). Limitation des tentatives (connexion : 10 par 15 min et par couple IP/numéro, 60 par IP ; inscription : 5 par heure et par IP), compteurs en base. Sessions `HttpOnly` et `Secure`, en-têtes de sécurité (CSP, HSTS, anti-cadre), propriété vérifiée sur chaque ressource, logo : 2 Mo maximum avant redimensionnement, type vérifié sur les octets réels, aucune clé côté client.
+Pas d'inscription publique. Limitation des tentatives (connexion : 10 par 15 min et par couple IP/numéro, 60 par IP), compteurs en base. Sessions `HttpOnly` et `Secure`, en-têtes de sécurité (CSP, HSTS, anti-cadre), propriété vérifiée sur chaque ressource, logo : 2 Mo maximum avant redimensionnement, type vérifié sur les octets réels, aucune clé côté client.
 
 ## Reste à faire (version 2)
 

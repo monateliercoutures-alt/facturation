@@ -17,7 +17,8 @@ class TooManyAttempts extends CredentialsSignin {
 }
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
-  session: { strategy: "jwt", maxAge: 60 * 60 * 24 * 30 },
+  // Session d'un an : une seule connexion, puis le téléphone ouvre directement le tableau de bord.
+  session: { strategy: "jwt", maxAge: 60 * 60 * 24 * 365, updateAge: 60 * 60 * 24 },
   useSecureCookies: process.env.NODE_ENV === "production",
   pages: { signIn: "/connexion" },
   providers: [

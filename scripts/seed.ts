@@ -20,12 +20,12 @@ async function main() {
   const client = postgres(process.env.DATABASE_URL_UNPOOLED || DATABASE_URL, { max: 1, prepare: false });
   const db = drizzle(client);
   const passwordHash = await hashPassword(SEED_ADMIN_PASSWORD);
-  // Ne réécrit jamais le mot de passe d'un compte existant (le seed tourne à chaque déploiement de production) :
-  // pour le changer, utilisez « npm run admin:reset-password » ou la page /admin.
+  // Ne réécrit pas le mot de passe d'un compte existant (le seed tourne à chaque déploiement de production),
+  // sauf demande explicite SEED_ADMIN_RESET=yes (mot de passe oublié : redéployer avec cette variable, puis la retirer).
   await db
     .insert(users)
     .values({ phone, name: SEED_ADMIN_NAME || "Administrateur", passwordHash, role: "admin" })
-    .onConflictDoUpdate({ target: users.phone, set: { role: "admin" } });
+    .onConflictDoUpdate({ target: users.phone, set: process.env.SEED_ADMIN_RESET === "yes" ? { role: "admin", passwordHash } : { role: "admin" } });
   // Profil société optionnel (variable SEED_COMPANY, JSON). Créé seulement s'il n'existe pas : jamais réécrit.
   if (process.env.SEED_COMPANY) {
     const parsed = companySchema.safeParse(JSON.parse(process.env.SEED_COMPANY));

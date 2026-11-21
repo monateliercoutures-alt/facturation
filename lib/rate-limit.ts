@@ -6,7 +6,6 @@ export type RateRule = { limit: number; windowSeconds: number };
 export const RULES = {
   login: { limit: 10, windowSeconds: 15 * 60 } satisfies RateRule,
   loginIp: { limit: 60, windowSeconds: 15 * 60 } satisfies RateRule,
-  signup: { limit: 5, windowSeconds: 60 * 60 } satisfies RateRule,
 };
 
 export type RateResult = { allowed: boolean; remaining: number; retryAfterSeconds: number };

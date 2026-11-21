@@ -31,12 +31,6 @@ export function SignInForm({ callbackUrl }: { callbackUrl?: string }) {
         <Link href="/mot-de-passe-oublie" className="font-semibold text-g underline">
           Mot de passe oublié ?
         </Link>
-        <p className="text-mut">
-          Pas encore de compte ?{" "}
-          <Link href="/inscription" className="font-semibold text-g underline">
-            Créer un compte
-          </Link>
-        </p>
       </div>
     </form>
   );

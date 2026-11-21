@@ -1,23 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { companySchema, signInSchema, signUpSchema } from "@/lib/validation";
-
-const valid = { name: "Awa Koné", phone: "07 00 00 00 00", email: "", password: "motdepasse", confirm: "motdepasse" };
-
-describe("signUpSchema", () => {
-  it("normalise le téléphone et l'e-mail vide", () => {
-    const r = signUpSchema.parse(valid);
-    expect(r.phone).toBe("+2250700000000");
-    expect(r.email).toBeNull();
-  });
-  it("refuse un mot de passe court ou différent", () => {
-    expect(signUpSchema.safeParse({ ...valid, password: "court", confirm: "court" }).success).toBe(false);
-    const r = signUpSchema.safeParse({ ...valid, confirm: "autrechose" });
-    expect(r.success).toBe(false);
-  });
-  it("refuse un e-mail invalide", () => {
-    expect(signUpSchema.safeParse({ ...valid, email: "pas-un-mail" }).success).toBe(false);
-  });
-});
+import { companySchema, signInSchema } from "@/lib/validation";
 
 describe("signInSchema", () => {
   it("refuse un numéro invalide", () => {

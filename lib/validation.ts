@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { normalizePhone } from "@/lib/phone";
-import { PASSWORD_MAX_LENGTH, PASSWORD_MIN_LENGTH } from "@/lib/password";
+import { PASSWORD_MAX_LENGTH } from "@/lib/password";
 
 const trimmed = (max: number) => z.string().trim().max(max, `${max} caractères maximum.`);
 const optionalText = (max: number) =>
@@ -34,29 +34,6 @@ export const optionalPhone = z
     }
     return phone;
   });
-
-const passwordSchema = z
-  .string()
-  .min(PASSWORD_MIN_LENGTH, `Le mot de passe doit faire au moins ${PASSWORD_MIN_LENGTH} caractères.`)
-  .max(PASSWORD_MAX_LENGTH, `Le mot de passe doit faire au plus ${PASSWORD_MAX_LENGTH} caractères.`);
-
-const optionalEmail = z
-  .string()
-  .trim()
-  .toLowerCase()
-  .optional()
-  .transform((v) => v || null)
-  .pipe(z.email("Adresse e-mail invalide.").nullable());
-
-export const signUpSchema = z
-  .object({
-    name: trimmed(120).min(2, "Indiquez votre nom (2 caractères minimum)."),
-    phone: phoneSchema,
-    email: optionalEmail,
-    password: passwordSchema,
-    confirm: z.string(),
-  })
-  .refine((d) => d.password === d.confirm, { path: ["confirm"], message: "Les deux mots de passe ne sont pas identiques." });
 
 export const signInSchema = z.object({
   phone: phoneSchema,

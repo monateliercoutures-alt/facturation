@@ -1,15 +1,8 @@
 "use server";
 
 import { CredentialsSignin, AuthError } from "next-auth";
-import { headers } from "next/headers";
-import { clientIp, hit, RULES } from "@/lib/rate-limit";
 import { signIn, signOut } from "@/auth";
-import { getDb } from "@/lib/db";
-import { users } from "@/lib/db/schema";
-import { hashPassword } from "@/lib/password";
-import { canSignUp } from "@/lib/access";
-import { isAdminPhone } from "@/lib/phone";
-import { fieldErrors, signInSchema, signUpSchema, type FieldErrors } from "@/lib/validation";
+import { fieldErrors, signInSchema, type FieldErrors } from "@/lib/validation";
 
 export type FormState = { errors?: FieldErrors; message?: string; ok?: boolean; values?: Record<string, string> };
 
@@ -21,31 +14,6 @@ function values(formData: FormData, keys: string[]): Record<string, string> {
 function safeRedirect(target: FormDataEntryValue | null, fallback: string): string {
   const s = typeof target === "string" ? target : "";
   return s.startsWith("/") && !s.startsWith("//") && !s.startsWith("/\\") ? s : fallback;
-}
-
-export async function signUpAction(_prev: FormState, formData: FormData): Promise<FormState> {
-  const kept = values(formData, ["name", "phone", "email"]);
-  const parsed = signUpSchema.safeParse(Object.fromEntries(formData));
-  if (!parsed.success) return { errors: fieldErrors(parsed.error), values: kept };
-
-  const { name, phone, email, password } = parsed.data;
-  if (!canSignUp(phone)) {
-    return { errors: { phone: "Les inscriptions sont fermées. Cet outil est réservé à son propriétaire." }, values: kept };
-  }
-  // Limitation des inscriptions : 5 par heure et par adresse IP.
-  const limit = await hit(getDb(), `signup:${clientIp(await headers())}`, RULES.signup);
-  if (!limit.allowed) return { message: "Trop d'inscriptions depuis cette connexion. Réessayez dans une heure.", values: kept };
-  const inserted = await getDb()
-    .insert(users)
-    .values({ name, phone, email, passwordHash: await hashPassword(password), role: isAdminPhone(phone) ? "admin" : "user" })
-    .onConflictDoNothing({ target: users.phone })
-    .returning({ id: users.id });
-  if (inserted.length === 0) {
-    return { errors: { phone: "Ce numéro a déjà un compte. Connectez-vous ou utilisez un autre numéro." }, values: kept };
-  }
-
-  await signIn("credentials", { phone, password, redirectTo: "/app/entreprise?bienvenue=1" });
-  return { ok: true };
 }
 
 export async function signInAction(_prev: FormState, formData: FormData): Promise<FormState> {
