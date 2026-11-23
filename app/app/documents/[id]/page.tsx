@@ -1,11 +1,11 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { cancelDocumentAction, markDeliveredAction, setInstallmentPaidAction } from "@/actions/documents";
+import { cancelDocumentAction, deleteDocumentAction, markDeliveredAction, setInstallmentPaidAction } from "@/actions/documents";
 import { CopyButton } from "@/components/copy-button";
 import { DocumentSheet } from "@/components/document-sheet";
 import { StatusPill } from "@/components/status-pill";
-import { DOCUMENT_LABELS, PAYMENT_METHODS, todayISO } from "@/lib/documents/calc";
+import { DOCUMENT_LABELS, DOCUMENT_TYPES, PAYMENT_METHODS, todayISO } from "@/lib/documents/calc";
 import { emailSender } from "@/lib/documents/email";
 import { getDocumentForUser } from "@/lib/documents/service";
 import { documentMessage, publicUrl, smsLink, whatsappLink } from "@/lib/documents/share";
@@ -111,15 +111,26 @@ export default async function DocumentPage({ params, searchParams }: { params: P
         <h2 className="mb-2 text-lg font-extrabold">Autres actions</h2>
         <div className="grid gap-2">
           <Link className="btn btn-ghost" href={`/app/documents/nouveau?from=${doc.id}&mode=duplicate`}>Dupliquer</Link>
-          {doc.type === "DEV" || doc.type === "PRO" ? <Link className="btn btn-ghost" href={`/app/documents/nouveau?from=${doc.id}&mode=facture`}>Transformer en facture</Link> : null}
-          {doc.type === "DEV" ? <Link className="btn btn-ghost" href={`/app/documents/nouveau?from=${doc.id}&mode=pro`}>Créer une facture pro forma</Link> : null}
-          {doc.type === "FAC" ? <Link className="btn btn-ghost" href={`/app/documents/nouveau?from=${doc.id}&mode=bl`}>Créer un bon de livraison</Link> : null}
+          {DOCUMENT_TYPES.filter((t) => t !== doc.type).map((t) => (
+            <Link key={t} className="btn btn-ghost" href={`/app/documents/nouveau?from=${doc.id}&mode=to&to=${t}`}>
+              Transformer en {DOCUMENT_LABELS[t].singular.toLowerCase()}
+            </Link>
+          ))}
           {doc.type === "BL" && view.status !== "delivered" ? (
             <form action={markDeliveredAction.bind(null, doc.id)}><button className="btn">Marquer comme livré</button></form>
           ) : null}
           {doc.type !== "BL" && !cancelled ? (
             <form action={cancelDocumentAction.bind(null, doc.id)}><button className="min-h-12 w-full cursor-pointer rounded-xl border-[1.5px] border-err font-bold text-err">Annuler ce document</button></form>
           ) : null}
+          <details className="rounded-xl border-[1.5px] border-err p-3">
+            <summary className="min-h-6 cursor-pointer font-bold text-err">Supprimer ce document</summary>
+            <p className="my-2 text-sm text-mut">
+              {label.singular} {doc.number} sera supprimé{feminine ? "e" : ""} définitivement, avec ses articles{doc.type === "FAC" ? " et ses paiements (ils ne seront plus comptés dans l’encaissé)" : ""}. Le numéro ne sera pas réutilisé. Cette action est irréversible.
+            </p>
+            <form action={deleteDocumentAction.bind(null, doc.id)}>
+              <button className="min-h-12 w-full cursor-pointer rounded-xl bg-err font-bold text-on">Oui, supprimer définitivement</button>
+            </form>
+          </details>
         </div>
       </section>
 

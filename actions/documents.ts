@@ -79,6 +79,14 @@ export async function cancelDocumentAction(documentId: string) {
   revalidatePath("/app/documents");
 }
 
+/** Supprime définitivement un document de l'utilisateur (articles et tranches suivent). Le numéro n'est pas réattribué. */
+export async function deleteDocumentAction(documentId: string) {
+  const user = await requireUser();
+  await getDb().delete(documents).where(and(eq(documents.id, documentId), eq(documents.userId, user.id)));
+  revalidatePath("/app", "layout");
+  redirect("/app/documents?supprime=1");
+}
+
 export async function markDeliveredAction(documentId: string) {
   const user = await requireUser();
   await getDb()

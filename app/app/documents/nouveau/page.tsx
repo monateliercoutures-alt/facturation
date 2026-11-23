@@ -10,7 +10,7 @@ import { DocumentForm, type FormInitial } from "./document-form";
 
 export const metadata: Metadata = { title: "Nouveau document" };
 
-type Search = { type?: string; from?: string; mode?: string };
+type Search = { type?: string; from?: string; mode?: string; to?: string };
 
 export default async function NewDocumentPage({ searchParams }: { searchParams: Promise<Search> }) {
   const user = await requireUser();
@@ -55,8 +55,9 @@ export default async function NewDocumentPage({ searchParams }: { searchParams: 
     const src = await getDocumentForUser(user.id, sp.from);
     if (!src) redirect("/app/documents");
     const from = src.doc.type;
+    const target = DOCUMENT_TYPES.find((t) => t === sp.to);
     const type =
-      sp.mode === "facture" && (from === "DEV" || from === "PRO") ? "FAC" : sp.mode === "pro" && from === "DEV" ? "PRO" : sp.mode === "bl" && (from === "FAC" || from === "PRO") ? "BL" : from;
+      sp.mode === "to" && target && target !== from ? target : sp.mode === "facture" && (from === "DEV" || from === "PRO") ? "FAC" : sp.mode === "pro" && from === "DEV" ? "PRO" : sp.mode === "bl" && (from === "FAC" || from === "PRO") ? "BL" : from;
     const traits = TYPE_TRAITS[type];
     initial = {
       type,
@@ -89,7 +90,7 @@ export default async function NewDocumentPage({ searchParams }: { searchParams: 
     };
   }
 
-  const heading = sp.mode === "facture" ? "Transformer en facture" : sp.mode === "pro" ? "Facture pro forma depuis le devis" : sp.mode === "bl" ? "Bon de livraison depuis la facture" : sp.mode === "duplicate" ? "Dupliquer le document" : "Nouveau document";
+  const heading = sp.mode === "facture" ? "Transformer en facture" : sp.mode === "pro" ? "Facture pro forma depuis le devis" : sp.mode === "bl" ? "Bon de livraison depuis la facture" : sp.mode === "to" ? "Transformer le document" : sp.mode === "duplicate" ? "Dupliquer le document" : "Nouveau document";
   return (
     <>
       <h1 className="sr-only">{heading}</h1>

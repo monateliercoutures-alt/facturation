@@ -8,7 +8,7 @@ import { requireUser } from "@/lib/session";
 
 export const metadata: Metadata = { title: "Mes documents" };
 
-type Search = { q?: string; type?: string; status?: string };
+type Search = { q?: string; type?: string; status?: string; supprime?: string };
 
 export default async function DocumentsPage({ searchParams }: { searchParams: Promise<Search> }) {
   const user = await requireUser();
@@ -20,6 +20,9 @@ export default async function DocumentsPage({ searchParams }: { searchParams: Pr
 
   return (
     <>
+      {sp.supprime === "1" ? (
+        <p role="status" className="mb-4 rounded-xl bg-gs px-3 py-2.5 text-sm font-semibold text-g">Document supprimé.</p>
+      ) : null}
       <div className="mb-4 flex items-center justify-between gap-3">
         <h1 className="text-2xl font-extrabold tracking-tight">Mes documents</h1>
         <Link href="/app/documents/nouveau" className="btn !w-auto px-4">+ Nouveau</Link>
