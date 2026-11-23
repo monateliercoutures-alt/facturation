@@ -24,6 +24,8 @@ const s = StyleSheet.create({
   th: { flexDirection: "row", color: "#fff", fontSize: 8, fontFamily: "Helvetica-Bold", paddingVertical: 5, paddingHorizontal: 4 },
   tr: { flexDirection: "row", paddingVertical: 4, paddingHorizontal: 4 },
   zebra: { backgroundColor: SOFT },
+  // Le corps du tableau s'étire pour que le document occupe toute la hauteur de la feuille A4.
+  body: { flexGrow: 1, borderBottomWidth: 0.7, borderBottomColor: LINE, marginBottom: 6 },
   cDesc: { flex: 1, paddingRight: 6 },
   cQty: { width: 56, textAlign: "right" },
   cUnit: { width: 44, paddingLeft: 6 },
@@ -102,6 +104,7 @@ export function DocumentPdf({ data }: { data: SheetData }) {
           {!isBL ? <Text style={s.cAmount}>MONTANT</Text> : null}
           {d.showObservations ? <Text style={s.cObs}>OBSERVATIONS</Text> : null}
         </View>
+        <View style={s.body}>
         {data.items.map((i, n) => (
           <View key={n} style={[s.tr, n % 2 ? s.zebra : {}]} wrap={false}>
             <Text style={s.cDesc}>{i.description}</Text>
@@ -113,6 +116,7 @@ export function DocumentPdf({ data }: { data: SheetData }) {
             {d.showObservations ? <Text style={s.cObs}>{i.observation ?? ""}</Text> : null}
           </View>
         ))}
+        </View>
 
         {traits.priced ? (
           <>

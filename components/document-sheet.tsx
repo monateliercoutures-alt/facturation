@@ -13,7 +13,7 @@ export function DocumentSheet({ data }: { data: SheetData }) {
   const shipTo = isBL ? (data.deliveryAddress ?? data.client.address) : data.deliveryAddress;
 
   return (
-    <article aria-label={`${traits.singular} ${data.number}`} className="rounded-2xl border border-[#D9E2DB] bg-white p-4 text-[14px] leading-snug text-[#12261C] sm:p-6">
+    <article aria-label={`${traits.singular} ${data.number}`} className="rounded-2xl border border-[#D9E2DB] flex flex-col bg-white p-4 text-[14px] leading-snug text-[#12261C] sm:p-6" style={{ aspectRatio: "210 / 297" }}>
       <header className="mb-4 flex items-start justify-between gap-3 border-b-[3px] pb-4" style={{ borderColor: GREEN }}>
         <div className="min-w-0">
           {data.company.logo ? (
@@ -59,7 +59,7 @@ export function DocumentSheet({ data }: { data: SheetData }) {
         </p>
       ) : null}
 
-      <div className="overflow-x-auto">
+      <div className="flex-1 overflow-x-auto">
         <table className="mb-3 w-full border-collapse">
           <thead>
             <tr className="text-left text-xs text-white uppercase" style={{ background: GREEN }}>
